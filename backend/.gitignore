@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+
+# Archivos de entorno
+.env
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+
+# Builds
+dist/
+build/
+
+# Archivos de lock (npm o yarn)
+package-lock.json
+yarn.lock
+
+# Archivos de errores comunes
+*.gz
+*.tgz
