@@ -23,7 +23,4 @@ router.route('/:id')
 // NUEVA RUTA PARA EDITAR SESIONES
 router.put('/:id/sesion', actualizarNumeroSesion);
 
-// NO OLVIDARME DE BORRAR DESPUES!!!
-router.get('/normalizar', normalizarClientes);
-
 module.exports = router;

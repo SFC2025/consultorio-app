@@ -1,4 +1,3 @@
-import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Registro from "./Registro";
 import PanelProfesional from "./pages/PanelProfesional";

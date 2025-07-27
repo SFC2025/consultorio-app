@@ -110,28 +110,6 @@ const eliminarCliente = async (req, res) => {
   }
 };
 
-// BORRAR DESPUES - NO OLVIDARME DE BORRARRRRRRRR
-const normalizarClientes = async (req, res) => {
-  try {
-    const clientes = await Cliente.find();
-    for (const cliente of clientes) {
-      await Cliente.updateOne(
-        { _id: cliente._id },
-        {
-          $set: {
-            nombre: cliente.nombre.toLowerCase(),
-            apellido: cliente.apellido.toLowerCase(),
-          },
-        }
-      );
-    }
-    res.json({ mensaje: "Clientes normalizados en minúsculas." });
-  } catch (err) {
-    console.error("Error al normalizar clientes:", err);
-    res.status(500).json({ error: "Error al normalizar clientes" });
-  }
-};
-
 const actualizarNumeroSesion = async (req, res) => {
   const { numeroSesion } = req.body;
   try {
@@ -156,6 +134,5 @@ module.exports = {
   obtenerCliente,
   actualizarCliente,
   eliminarCliente,
-  normalizarClientes, // DEBE BORRARSE LUEGO
   actualizarNumeroSesion, // <-- AGREGUE ESTA FUNCIÓN
 };
