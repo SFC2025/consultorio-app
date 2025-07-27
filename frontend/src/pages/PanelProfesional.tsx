@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import "./panelProfesional.css";
+import "./panelProfesional.css";
 
 // Tipos para el cliente y turno
 interface Cliente {
@@ -11,7 +13,7 @@ interface Cliente {
 
 interface Turno {
   _id: string;
-  fecha: string;
+  fechaHora: string;
   diagnostico: string;
   profesional: string;
 }
@@ -19,13 +21,21 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL as string;
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
+  const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
+  const [nuevoNumeroSesion, setNuevoNumeroSesion] = useState<number>(0); // valor temporal
   const [fechaSesion, setFechaSesion] = useState(() => {
     const hoy = new Date().toISOString().slice(0, 10);
     return hoy;
   });
+  const [busqueda, setBusqueda] = useState("");
+
+  // Filtro antes de renderizar
+  const clientesFiltrados = clientes.filter((c) =>
+    `${c.nombre} ${c.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const [clienteActivo, setClienteActivo] = useState<Cliente | null>(null);
   const [profesionalNombre, setProfesionalNombre] = useState("");
@@ -53,6 +63,14 @@ const PanelProfesional = () => {
     const fetchClientes = async () => {
       if (!profesionalNombre) return;
       try {
+        console.log("Profesional seleccionado:", profesionalNombre);
+        console.log(
+          "URL:",
+          `${API_URL}/clientes?profesional=${encodeURIComponent(
+            profesionalNombre
+          )}`
+        );
+
         const res = await fetch(
           `${API_URL}/clientes?profesional=${encodeURIComponent(
             profesionalNombre
@@ -62,6 +80,8 @@ const PanelProfesional = () => {
         const data = await res.json();
         console.log("👥 Clientes recibidos:", data);
         setClientes(data);
+        setHistorial([]); // limpia historial
+        setClienteActivo(null);
       } catch (err) {
         alert("❌ No se pudo obtener la lista de pacientes");
         console.error("Error al cargar pacientes", err);
@@ -72,8 +92,11 @@ const PanelProfesional = () => {
 
   const cargarHistorial = async (clienteId: string) => {
     try {
-      const res = await fetch(`${API_URL}/turnos/historial/${clienteId}`);
-
+      const res = await fetch(
+        `${API_URL}/turnos/historial/${clienteId}?profesional=${encodeURIComponent(
+          profesionalNombre
+        )}`
+      );
       const data = await res.json();
       console.log("📄 Historial recibido:", data);
       setHistorial(data);
@@ -85,14 +108,17 @@ const PanelProfesional = () => {
   const enviarDiagnostico = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clienteActivo) return;
+
     console.log("📦 Enviando datos:", {
       clienteId: clienteActivo._id,
       nombre: clienteActivo.nombre,
       apellido: clienteActivo.apellido,
+      obraSocial: clienteActivo.obraSocial,
       diagnostico,
       profesional: profesionalNombre,
       fecha: fechaSesion,
     });
+
     try {
       const res = await fetch(`${API_URL}/turnos`, {
         method: "POST",
@@ -101,11 +127,15 @@ const PanelProfesional = () => {
           clienteId: clienteActivo._id,
           nombre: clienteActivo.nombre,
           apellido: clienteActivo.apellido,
+          obraSocial: clienteActivo.obraSocial,
           diagnostico,
           profesional: profesionalNombre,
-          fecha: fechaSesion,
+          fechaHora: new Date(
+            `${fechaSesion}T${new Date().toTimeString().split(" ")[0]}`
+          ).toISOString(),
         }),
       });
+
       const data = await res.json();
       if (res.ok) {
         setMensaje(
@@ -129,6 +159,36 @@ const PanelProfesional = () => {
     }
   };
 
+  // ✅ Esto va afuera de enviarDiagnostico
+  const borrarDiagnostico = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este diagnóstico?"))
+      return;
+
+    try {
+      const res = await fetch(`${API_URL}/turnos/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al borrar diagnóstico");
+
+      if (clienteActivo) {
+        const data = await res.json(); // <-- leer la respuesta con clienteActualizado
+        // Actualizar el historial
+        await cargarHistorial(clienteActivo._id);
+
+        // Actualizar el contador del cliente en memoria
+        if (data.clienteActualizado) {
+          setClientes((prev) =>
+            prev.map((c) =>
+              c._id === clienteActivo._id ? data.clienteActualizado : c
+            )
+          );
+          setClienteActivo(data.clienteActualizado);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo borrar el diagnóstico");
+    }
+  };
+
   const thStyle: React.CSSProperties = {
     textAlign: "left",
     padding: "10px",
@@ -144,8 +204,10 @@ const PanelProfesional = () => {
     <div
       style={{
         padding: "2rem",
-        backgroundColor: "#eef2f7",
+        backgroundColor: "#f9fafb",
         minHeight: "100vh",
+        fontFamily: "Inter, sans-serif",
+        lineHeight: "1.5",
       }}
     >
       <h1>🩺 Panel de Profesionales</h1>
@@ -158,11 +220,7 @@ const PanelProfesional = () => {
             value={profesionalNombre}
             onChange={(e) => setProfesionalNombre(e.target.value)}
             required
-            style={{
-              marginLeft: "1rem",
-              padding: "6px",
-              borderRadius: "6px",
-            }}
+            className="form-control"
           >
             <option value="">-- Seleccione --</option>
             {profesionales.map((p) => (
@@ -173,12 +231,24 @@ const PanelProfesional = () => {
           </select>
         </label>
       </div>
+      {/* Buscador de pacientes */}
+      <input
+        type="text"
+        placeholder="Buscar paciente..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="form-control"
+      />
+
       <table
         style={{
           width: "100%",
           marginTop: "20px",
           borderCollapse: "collapse",
           backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+          overflow: "hidden",
         }}
       >
         <thead>
@@ -191,12 +261,79 @@ const PanelProfesional = () => {
           </tr>
         </thead>
         <tbody>
-          {clientes.map((c) => (
+          {clientesFiltrados.map((c) => (
             <tr key={c._id}>
               <td style={tdStyle}>{capitalizar(c.nombre)}</td>
               <td style={tdStyle}>{capitalizar(c.apellido)}</td>
               <td style={tdStyle}>{c.obraSocial}</td>
-              <td style={tdStyle}>{c.numeroSesion}</td>
+              <td style={tdStyle}>
+                {editandoSesion === c._id ? (
+                  <>
+                    <input
+                      type="number"
+                      value={nuevoNumeroSesion}
+                      onChange={(e) =>
+                        setNuevoNumeroSesion(Number(e.target.value))
+                      }
+                      style={{ width: "60px", marginRight: "5px" }}
+                    />
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(
+                            `${API_URL}/clientes/${c._id}/sesion`,
+                            {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                numeroSesion: nuevoNumeroSesion,
+                              }),
+                            }
+                          );
+                          const data = await res.json();
+                          if (res.ok) {
+                            setClientes((prev) =>
+                              prev.map((cl) =>
+                                cl._id === c._id
+                                  ? { ...cl, numeroSesion: nuevoNumeroSesion }
+                                  : cl
+                              )
+                            );
+                            setEditandoSesion(null);
+                          } else {
+                            alert(`Error: ${data.error}`);
+                          }
+                        } catch (error) {
+                          console.error("Error al editar sesión:", error);
+                        }
+                      }}
+                      className="btn"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditandoSesion(null)}
+                      className="btn-outline"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {c.numeroSesion}
+                    <button
+                      onClick={() => {
+                        setEditandoSesion(c._id);
+                        setNuevoNumeroSesion(c.numeroSesion);
+                      }}
+                      className="btn-outline"
+                    >
+                      ✏️
+                    </button>
+                  </>
+                )}
+              </td>
+
               <td style={tdStyle}>
                 <button
                   onClick={() => {
@@ -204,6 +341,7 @@ const PanelProfesional = () => {
                     setDiagnostico("");
                     cargarHistorial(c._id);
                   }}
+                  className="btn"
                 >
                   🩺 Diagnóstico
                 </button>
@@ -215,7 +353,7 @@ const PanelProfesional = () => {
                     setEditObraSocial(c.obraSocial);
                     setModoEdicion(true);
                   }}
-                  style={{ marginLeft: "8px" }}
+                  className="btn-outline"
                 >
                   ✏️ Editar
                 </button>
@@ -272,6 +410,10 @@ const PanelProfesional = () => {
             marginTop: "30px",
             borderRadius: "12px",
             maxWidth: "400px",
+            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            flexDirection: "column", // <-- Importante
+            gap: "10px", // <-- Espacio entre elementos
           }}
         >
           <h3>Editar Cliente</h3>
@@ -296,22 +438,24 @@ const PanelProfesional = () => {
             onChange={(e) => setEditObraSocial(e.target.value)}
             required
           />
-          <button type="submit" style={{ marginTop: "10px" }}>
-            Guardar Cambios
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setModoEdicion(false);
-              setEditandoCliente(null);
-            }}
-            style={{ marginLeft: "10px" }}
-          >
-            Cancelar
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button type="submit" className="btn">
+              Guardar Cambios
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModoEdicion(false);
+                setEditandoCliente(null);
+              }}
+              className="btn-outline"
+            >
+              Cancelar
+            </button>
+          </div>
         </form>
       )}
-      // ⬅️ tu formulario de diagnóstico sigue abajo como está
+
       {clienteActivo && (
         <>
           <form
@@ -361,13 +505,7 @@ const PanelProfesional = () => {
               value={fechaSesion}
               onChange={(e) => setFechaSesion(e.target.value)}
               required
-              style={{
-                width: "100%",
-                padding: "8px",
-                marginBottom: "10px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-              }}
+              className="form-control"
             />
 
             <textarea
@@ -375,7 +513,7 @@ const PanelProfesional = () => {
               placeholder="Diagnóstico"
               value={diagnostico}
               onChange={(e) => setDiagnostico(e.target.value)}
-              style={{ width: "100%", minHeight: "100px", marginTop: "10px" }}
+              className="form-control"
             />
 
             <button
@@ -412,10 +550,16 @@ const PanelProfesional = () => {
                   >
                     <p>
                       <strong>📅 Fecha:</strong>{" "}
-                      {new Date(t.fecha).toLocaleString("es-AR", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {t.fechaHora &&
+                      !isNaN(new Date(t.fechaHora as string).getTime())
+                        ? new Date(t.fechaHora as string).toLocaleString(
+                            "es-AR",
+                            {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            }
+                          )
+                        : "Sin fecha"}
                     </p>
 
                     <p>
@@ -506,6 +650,20 @@ const PanelProfesional = () => {
                           >
                             ✏️ Editar
                           </button>
+                          <button
+                            onClick={() => borrarDiagnostico(t._id)}
+                            style={{
+                              marginLeft: "8px",
+                              background: "red",
+                              color: "white",
+                              border: "none",
+                              padding: "4px 8px",
+                              cursor: "pointer",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            🗑 Borrar
+                          </button>
                         </>
                       )}
                     </p>
@@ -520,6 +678,5 @@ const PanelProfesional = () => {
       )}
     </div>
   );
-};
-
+}
 export default PanelProfesional;

@@ -6,7 +6,7 @@ const turnoSchema = new mongoose.Schema({
   apellido: { type: String, required: true },
   diagnostico: { type: String, default: "" },
   profesional: { type: String, required: true },
-  obraSocial: { type: String, enum: ['Sancor', 'Jerárquicos'], default: null },
+  obraSocial: { type: String, required: true },
   numeroSesion: { type: Number, default: 1 },
   fechaHora: { type: Date, required: true },
 }, {

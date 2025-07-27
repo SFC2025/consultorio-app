@@ -1,0 +1,45 @@
+.btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-left: 8px;
+}
+
+.btn:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-outline {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-left: 8px;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+td button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  box-sizing: border-box;
+}

@@ -6,9 +6,9 @@ const {
   obtenerTurno,
   actualizarTurno,
   eliminarTurno,
-  actualizarDiagnostico, // para editar solo diagnóstico
+  actualizarDiagnostico,
+  historialPorClienteYProfesional,
 } = require('../controllers/turnoController');
-const Turno = require('../models/turnoModel');
 
 // Listar todos los turnos
 router.get('/', listarTurnos);
@@ -28,18 +28,7 @@ router.put('/:id', actualizarTurno);
 // Eliminar turno
 router.delete('/:id', eliminarTurno);
 
-// Obtener historial de turnos por cliente
-router.get('/historial/:clienteId', async (req, res) => {
-  const { clienteId } = req.params;
-  try {
-    const turnos = await Turno.find({ cliente: clienteId }).sort({ fecha: -1 });
-    res.json(turnos);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al obtener historial" });
-  }
-});
+// Historial por cliente con filtro por profesional
+router.get('/historial/:clienteId', historialPorClienteYProfesional);
 
 module.exports = router;
-
-
