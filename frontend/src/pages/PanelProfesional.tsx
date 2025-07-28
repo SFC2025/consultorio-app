@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./panelProfesional.css";
-const PIN = import.meta.env.VITE_PRO_PIN as string;
+
 const API_URL = import.meta.env.VITE_API_URL as string;
-const API_KEY = import.meta.env.VITE_API_KEY as string;
+
 const defaultHeaders = {
   "Content-Type": "application/json",
-  "x-api-key": API_KEY,
+  // Elimino x-api-key por seguridad
 };
 // Tipos para el cliente y turno
 interface Cliente {
@@ -26,9 +26,6 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
-  console.log("API_URL:", API_URL);
-  console.log("API_KEY:", API_KEY);
-  console.log("PIN:", PIN);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
   const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
@@ -52,7 +49,32 @@ const PanelProfesional = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <button onClick={() => setOk(input === PIN)}>Entrar</button>
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch(`${API_URL}/verificar-pin`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pin: input }),
+              });
+
+              const data = await res.json();
+              if (data.acceso) {
+                setOk(true);
+                setProfesionalNombre(
+                  prompt("¿Cuál es tu nombre exacto (como profesional)?") || ""
+                );
+              } else {
+                alert("PIN incorrecto");
+              }
+            } catch (err) {
+              alert("Error al verificar PIN");
+              console.error(err);
+            }
+          }}
+        >
+          Entrar
+        </button>
       </div>
     );
   }
@@ -76,6 +98,28 @@ const PanelProfesional = () => {
   const [editNombre, setEditNombre] = useState("");
   const [editApellido, setEditApellido] = useState("");
   const [editObraSocial, setEditObraSocial] = useState("");
+  useEffect(() => {
+    if (!ok || !profesionalNombre) return;
+
+    console.log("API_URL:", API_URL);
+    const fetchClientes = async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/clientes?profesional=${encodeURIComponent(
+            profesionalNombre
+          )}`,
+          { headers: defaultHeaders }
+        );
+        const data = await res.json();
+        console.log("CLIENTES:", data);
+        setClientes(data);
+      } catch (error) {
+        console.error("Error al obtener clientes:", error);
+      }
+    };
+
+    fetchClientes();
+  }, [ok, profesionalNombre]);
 
   const profesionales = [
     "Gonzalo Ambrosini - Kinesiólogo",

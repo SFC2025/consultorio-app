@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+const verificarPinRoutes = require("./routes/panel.routes");
 const auth = require("./middleware/auth");
 
 const app = express();
@@ -28,6 +29,8 @@ mongoose.connect(process.env.MONGO_URI, {
 // Rutas con auth
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
 app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
+app.use("/api", verificarPinRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
