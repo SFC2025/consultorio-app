@@ -26,11 +26,12 @@ mongoose.connect(process.env.MONGO_URI, {
     process.exit(1);
   });
 
-// Rutas con auth
-app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
-app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
+// ✅ Ruta sin auth (debe ir primero)
 app.use("/api", verificarPinRoutes);
 
+// ✅ Rutas protegidas (después)
+app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
+app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
