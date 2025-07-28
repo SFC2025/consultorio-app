@@ -40,48 +40,66 @@ const PanelProfesional = () => {
   const [ok, setOk] = useState(false);
   const [input, setInput] = useState("");
   const [profesionalNombre, setProfesionalNombre] = useState("");
+
+  
   if (!ok) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h2>Acceso profesionales</h2>
-        <input
-          type="password"
-          placeholder="Ingrese PIN"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Acceso profesionales</h2>
+      <input
+        type="password"
+        placeholder="Ingrese PIN"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button
+        onClick={async () => {
+          try {
+            const res = await fetch(`${API_URL}/verificar-pin`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pin: input }),
+            });
 
-        <button
-          onClick={async () => {
-            try {
-              console.log("Enviando PIN:", input);
-              const res = await fetch(`${API_URL}/verificar-pin`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ pin: input }),
-              });
-
-              console.log("Código de respuesta:", res.status);
-              const data = await res.json();
-              console.log("Respuesta del backend:", data);
-
-              if (data.acceso) {
-                setOk(true); // ✅ Solo activa el acceso
-                // Ya NO uso prompt, el profesional elegirá desde el <select>
-              } else {
-                alert("PIN incorrecto");
-              }
-            } catch (err) {
-              alert("Error al verificar PIN");
-              console.error(err);
+            const data = await res.json();
+            if (data.acceso) {
+              setOk(true);
+            } else {
+              alert("PIN incorrecto");
             }
-          }}
-        >
-          Entrar
-        </button>
-      </div>
-    );
-  }
+          } catch (err) {
+            alert("Error al verificar PIN");
+            console.error(err);
+          }
+        }}
+      >
+        Entrar
+      </button>
+
+      {/* Mostrar el select solo si el PIN es correcto */}
+      {ok && (
+        <div style={{ marginTop: "1rem" }}>
+          <label>
+            Seleccione su nombre profesional:
+            <select
+              value={profesionalNombre}
+              onChange={(e) => setProfesionalNombre(e.target.value)}
+              required
+            >
+              <option value="">-- Seleccione --</option>
+              {profesionales.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
