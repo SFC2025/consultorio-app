@@ -39,6 +39,7 @@ const PanelProfesional = () => {
   // BLOQUE DEL PIN
   const [ok, setOk] = useState(false);
   const [input, setInput] = useState("");
+  const [profesionalNombre, setProfesionalNombre] = useState("");
   if (!ok) {
     return (
       <div style={{ padding: 20 }}>
@@ -85,7 +86,6 @@ const PanelProfesional = () => {
   );
 
   const [clienteActivo, setClienteActivo] = useState<Cliente | null>(null);
-  const [profesionalNombre, setProfesionalNombre] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [historial, setHistorial] = useState<Turno[]>([]);
   const [modoEditarDiagnostico, setModoEditarDiagnostico] = useState(false);
