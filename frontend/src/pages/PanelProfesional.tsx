@@ -28,7 +28,6 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
-  const { profesionalesActivos } = useContext(ProfesionalContexto)!;
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
   const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
@@ -38,6 +37,7 @@ const PanelProfesional = () => {
     return hoy;
   });
   const [busqueda, setBusqueda] = useState("");
+  const { profesionalesActivos } = useContext(ProfesionalContexto)!;
 
   // BLOQUE DEL PIN
   const [ok, setOk] = useState(false);
