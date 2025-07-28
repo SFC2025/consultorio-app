@@ -28,7 +28,11 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
-  const { profesionalesActivos } = useContext(ProfesionalContexto)!;
+  const contexto = useContext(ProfesionalContexto);
+  if (!contexto) {
+    return <p>Error al cargar el contexto del profesional.</p>;
+  }
+  const { profesionalesActivos } = contexto;
   console.log("Profesionales del contexto:", profesionalesActivos);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
@@ -315,11 +319,13 @@ const PanelProfesional = () => {
             className="form-control"
           >
             <option value="">-- Seleccione --</option>
-            {profesionalesActivos.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
+            {profesionalesActivos?.map((p, i) =>
+              p ? (
+                <option key={i} value={p}>
+                  {p}
+                </option>
+              ) : null
+            )}
           </select>
         </label>
       </div>
