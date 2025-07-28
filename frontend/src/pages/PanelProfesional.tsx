@@ -50,16 +50,22 @@ const PanelProfesional = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
+
+        
         <button
           onClick={async () => {
             try {
+              console.log("Enviando PIN:", input);
               const res = await fetch(`${API_URL}/verificar-pin`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ pin: input }),
               });
 
+              console.log("Código de respuesta:", res.status);
               const data = await res.json();
+              console.log("Respuesta del backend:", data);
+
               if (data.acceso) {
                 setOk(true);
                 setProfesionalNombre(
