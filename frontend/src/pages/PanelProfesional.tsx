@@ -26,7 +26,6 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
-  const API_URL = import.meta.env.VITE_API_URL as string;
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
   const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
