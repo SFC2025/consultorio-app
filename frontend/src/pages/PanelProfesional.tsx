@@ -53,9 +53,9 @@ const PanelProfesional = () => {
         <h2>Acceso profesionales</h2>
         <input
           type="password"
-          placeholder="Ingrese PIN"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          placeholder="Ingresá tu PIN"
         />
         <button
           onClick={async () => {
@@ -81,7 +81,7 @@ const PanelProfesional = () => {
           Entrar
         </button>
 
-        {/* Mostrar el select solo si el PIN es correcto */}
+        {/* Mostrar el select solo cuando el PIN sea correcto */}
         {ok && (
           <div style={{ marginTop: "1rem" }}>
             <label>
