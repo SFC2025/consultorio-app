@@ -6,10 +6,10 @@ import { ProfesionalProvider } from "./context/ProfesionalContexto";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ProfesionalProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </ProfesionalProvider>
-  </React.StrictMode>
+  <ProfesionalProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </ProfesionalProvider>
+</React.StrictMode>
 );
