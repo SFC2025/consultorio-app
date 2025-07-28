@@ -59,12 +59,16 @@ const PanelProfesional = () => {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ingresá tu PIN"
         />
+        
         <button
           onClick={async () => {
             try {
               const res = await fetch(`${API_URL}/verificar-pin`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": import.meta.env.VITE_API_KEY, // solo si tu backend lo requiere
+                },
                 body: JSON.stringify({ pin: input }),
               });
 
@@ -82,7 +86,6 @@ const PanelProfesional = () => {
         >
           Entrar
         </button>
-
         {/* Elegir nombre profesional (después de PIN correcto) */}
         {ok && (
           <div style={{ marginTop: "1rem" }}>
