@@ -26,6 +26,9 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
+  console.log("API_URL:", API_URL);
+  console.log("API_KEY:", API_KEY);
+  console.log("PIN:", PIN);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
   const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
