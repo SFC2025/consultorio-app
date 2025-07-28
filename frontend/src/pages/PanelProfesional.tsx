@@ -51,7 +51,6 @@ const PanelProfesional = () => {
           onChange={(e) => setInput(e.target.value)}
         />
 
-        
         <button
           onClick={async () => {
             try {
@@ -67,10 +66,8 @@ const PanelProfesional = () => {
               console.log("Respuesta del backend:", data);
 
               if (data.acceso) {
-                setOk(true);
-                setProfesionalNombre(
-                  prompt("¿Cuál es tu nombre exacto (como profesional)?") || ""
-                );
+                setOk(true); // ✅ Solo activa el acceso
+                // Ya NO uso prompt, el profesional elegirá desde el <select>
               } else {
                 alert("PIN incorrecto");
               }
