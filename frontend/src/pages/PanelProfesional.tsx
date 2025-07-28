@@ -29,10 +29,10 @@ const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
   const contexto = useContext(ProfesionalContexto);
-  console.log("🎯 Contexto completo:", contexto); // 👈 acá ves si es null en consola
 
   if (!contexto) {
-    return <p>Error al cargar el contexto del profesional.</p>;
+    console.error("Contexto nulo en PanelProfesional");
+    return <p>Error cargando contexto.</p>;
   }
 
   const { profesionalesActivos } = contexto;

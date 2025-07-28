@@ -1,12 +1,12 @@
-import { createContext, useState, useContext, type ReactNode } from "react";
+import { createContext, useState, type ReactNode } from "react";
 
 type ProfesionalContextType = {
   profesionalesActivos: string[];
 };
 
-const ProfesionalContexto = createContext<ProfesionalContextType | null>(null);
+export const ProfesionalContexto = createContext<ProfesionalContextType | null>(null);
 
-const ProfesionalProvider = ({ children }: { children: ReactNode }) => {
+export const ProfesionalProvider = ({ children }: { children: ReactNode }) => {
   const [profesionalesActivos] = useState<string[]>([
     "Gonzalo Ambrosini - Kinesiólogo",
     "Ignacio Sagardoy - Kinesiólogo",
@@ -20,5 +20,3 @@ const ProfesionalProvider = ({ children }: { children: ReactNode }) => {
     </ProfesionalContexto.Provider>
   );
 };
-
-export { ProfesionalContexto, ProfesionalProvider };
