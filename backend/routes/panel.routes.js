@@ -1,4 +1,4 @@
-import express from "express";
+const express = require("express");
 const router = express.Router();
 
 router.post("/verificar-pin", (req, res) => {
@@ -12,4 +12,4 @@ router.post("/verificar-pin", (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
