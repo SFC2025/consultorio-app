@@ -29,9 +29,12 @@ const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
   const contexto = useContext(ProfesionalContexto);
+  console.log("🎯 Contexto completo:", contexto); // 👈 acá ves si es null en consola
+
   if (!contexto) {
     return <p>Error al cargar el contexto del profesional.</p>;
   }
+
   const { profesionalesActivos } = contexto;
   console.log("Profesionales del contexto:", profesionalesActivos);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -59,7 +62,7 @@ const PanelProfesional = () => {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ingresá tu PIN"
         />
-        
+
         <button
           onClick={async () => {
             try {
