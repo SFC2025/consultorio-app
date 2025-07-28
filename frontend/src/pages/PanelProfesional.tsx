@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./panelProfesional.css";
+import { useContext } from "react";
+import { ProfesionalContexto } from "../context/ProfesionalContexto";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
@@ -26,6 +28,7 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
+  const { profesionalesActivos } = useContext(ProfesionalContexto)!;
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
   const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
@@ -40,12 +43,6 @@ const PanelProfesional = () => {
   const [ok, setOk] = useState(false);
   const [input, setInput] = useState("");
   const [profesionalNombre, setProfesionalNombre] = useState("");
-  const profesionales = [
-    "Gonzalo Ambrosini - Kinesiólogo",
-    "Ignacio Sagardoy - Kinesiólogo",
-    "María Victoria De Angelis - Nutricionista",
-    "Jose Maximino - Quiropráctico",
-  ];
 
   if (!ok) {
     return (
@@ -92,7 +89,7 @@ const PanelProfesional = () => {
                 required
               >
                 <option value="">-- Seleccione --</option>
-                {profesionales.map((p) => (
+                {profesionalesActivos.map((p) => (
                   <option key={p} value={p}>
                     {p}
                   </option>
@@ -317,7 +314,7 @@ const PanelProfesional = () => {
             className="form-control"
           >
             <option value="">-- Seleccione --</option>
-            {profesionales.map((p) => (
+            {profesionalesActivos.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -589,7 +586,7 @@ const PanelProfesional = () => {
               }}
             >
               <option value="">Seleccione profesional</option>
-              {profesionales.map((p) => (
+              {profesionalesActivos.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>
