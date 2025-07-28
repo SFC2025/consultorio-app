@@ -40,66 +40,70 @@ const PanelProfesional = () => {
   const [ok, setOk] = useState(false);
   const [input, setInput] = useState("");
   const [profesionalNombre, setProfesionalNombre] = useState("");
+  const profesionales = [
+    "Gonzalo Ambrosini - Kinesiólogo",
+    "Ignacio Sagardoy - Kinesiólogo",
+    "María Victoria De Angelis - Nutricionista",
+    "Jose Maximino - Quiropráctico",
+  ];
 
-  
   if (!ok) {
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Acceso profesionales</h2>
-      <input
-        type="password"
-        placeholder="Ingrese PIN"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <button
-        onClick={async () => {
-          try {
-            const res = await fetch(`${API_URL}/verificar-pin`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pin: input }),
-            });
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>Acceso profesionales</h2>
+        <input
+          type="password"
+          placeholder="Ingrese PIN"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetch(`${API_URL}/verificar-pin`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pin: input }),
+              });
 
-            const data = await res.json();
-            if (data.acceso) {
-              setOk(true);
-            } else {
-              alert("PIN incorrecto");
+              const data = await res.json();
+              if (data.acceso) {
+                setOk(true);
+              } else {
+                alert("PIN incorrecto");
+              }
+            } catch (err) {
+              alert("Error al verificar PIN");
+              console.error(err);
             }
-          } catch (err) {
-            alert("Error al verificar PIN");
-            console.error(err);
-          }
-        }}
-      >
-        Entrar
-      </button>
+          }}
+        >
+          Entrar
+        </button>
 
-      {/* Mostrar el select solo si el PIN es correcto */}
-      {ok && (
-        <div style={{ marginTop: "1rem" }}>
-          <label>
-            Seleccione su nombre profesional:
-            <select
-              value={profesionalNombre}
-              onChange={(e) => setProfesionalNombre(e.target.value)}
-              required
-            >
-              <option value="">-- Seleccione --</option>
-              {profesionales.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-    </div>
-  );
-}
-
+        {/* Mostrar el select solo si el PIN es correcto */}
+        {ok && (
+          <div style={{ marginTop: "1rem" }}>
+            <label>
+              Seleccione su nombre profesional:
+              <select
+                value={profesionalNombre}
+                onChange={(e) => setProfesionalNombre(e.target.value)}
+                required
+              >
+                <option value="">-- Seleccione --</option>
+                {profesionales.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
@@ -141,13 +145,6 @@ const PanelProfesional = () => {
 
     fetchClientes();
   }, [ok, profesionalNombre]);
-
-  const profesionales = [
-    "Gonzalo Ambrosini - Kinesiólogo",
-    "Ignacio Sagardoy - Kinesiólogo",
-    "María Victoria De Angelis - Nutricionista",
-    "Jose Maximino - Quiropráctico",
-  ];
 
   useEffect(() => {
     const fetchClientes = async () => {
