@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./panelProfesional.css";
-import "./panelProfesional.css";
-
+const PIN = import.meta.env.VITE_PRO_PIN as string;
+const API_URL = import.meta.env.VITE_API_URL as string;
+const API_KEY = import.meta.env.VITE_API_KEY as string;
+const defaultHeaders = {
+  "Content-Type": "application/json",
+  "x-api-key": API_KEY,
+};
 // Tipos para el cliente y turno
 interface Cliente {
   _id: string;
@@ -31,6 +36,24 @@ const PanelProfesional = () => {
     return hoy;
   });
   const [busqueda, setBusqueda] = useState("");
+
+  // BLOQUE DEL PIN
+  const [ok, setOk] = useState(false);
+  const [input, setInput] = useState("");
+  if (!ok) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>Acceso profesionales</h2>
+        <input
+          type="password"
+          placeholder="Ingrese PIN"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button onClick={() => setOk(input === PIN)}>Entrar</button>
+      </div>
+    );
+  }
 
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
@@ -74,7 +97,8 @@ const PanelProfesional = () => {
         const res = await fetch(
           `${API_URL}/clientes?profesional=${encodeURIComponent(
             profesionalNombre
-          )}`
+          )}`,
+          { headers: defaultHeaders }
         );
 
         const data = await res.json();
@@ -95,8 +119,10 @@ const PanelProfesional = () => {
       const res = await fetch(
         `${API_URL}/turnos/historial/${clienteId}?profesional=${encodeURIComponent(
           profesionalNombre
-        )}`
+        )}`,
+        { headers: defaultHeaders }
       );
+
       const data = await res.json();
       console.log("📄 Historial recibido:", data);
       setHistorial(data);
@@ -122,7 +148,7 @@ const PanelProfesional = () => {
     try {
       const res = await fetch(`${API_URL}/turnos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: defaultHeaders,
         body: JSON.stringify({
           clienteId: clienteActivo._id,
           nombre: clienteActivo.nombre,
@@ -165,7 +191,11 @@ const PanelProfesional = () => {
       return;
 
     try {
-      const res = await fetch(`${API_URL}/turnos/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/turnos/${id}`, {
+        method: "DELETE",
+        headers: defaultHeaders,
+      });
+
       if (!res.ok) throw new Error("Error al borrar diagnóstico");
 
       if (clienteActivo) {
@@ -284,12 +314,13 @@ const PanelProfesional = () => {
                             `${API_URL}/clientes/${c._id}/sesion`,
                             {
                               method: "PUT",
-                              headers: { "Content-Type": "application/json" },
+                              headers: defaultHeaders,
                               body: JSON.stringify({
                                 numeroSesion: nuevoNumeroSesion,
                               }),
                             }
                           );
+
                           const data = await res.json();
                           if (res.ok) {
                             setClientes((prev) =>
@@ -371,7 +402,7 @@ const PanelProfesional = () => {
                 `${API_URL}/clientes/${editandoCliente._id}`,
                 {
                   method: "PUT",
-                  headers: { "Content-Type": "application/json" },
+                  headers: defaultHeaders,
                   body: JSON.stringify({
                     nombre: editNombre,
                     apellido: editApellido,
@@ -589,9 +620,7 @@ const PanelProfesional = () => {
                                     `${API_URL}/turnos/${(t as any)._id}`,
                                     {
                                       method: "PUT",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
+                                      headers: defaultHeaders,
                                       body: JSON.stringify({
                                         diagnostico: diagnosticoEditado,
                                       }),
@@ -678,5 +707,5 @@ const PanelProfesional = () => {
       )}
     </div>
   );
-}
+};
 export default PanelProfesional;
