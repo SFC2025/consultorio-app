@@ -45,7 +45,7 @@ const PanelProfesional = () => {
   const [input, setInput] = useState("");
   const [profesionalNombre, setProfesionalNombre] = useState("");
 
-  if (!ok) {
+  if (!ok || !profesionalNombre) {
     return (
       <div style={{ padding: 20 }}>
         <h2>Acceso profesionales</h2>
@@ -66,7 +66,7 @@ const PanelProfesional = () => {
 
               const data = await res.json();
               if (data.acceso) {
-                setOk(true);
+                setOk(true); // acceso ok
               } else {
                 alert("PIN incorrecto");
               }
@@ -79,7 +79,7 @@ const PanelProfesional = () => {
           Entrar
         </button>
 
-        {/* Mostrar el select solo cuando el PIN sea correcto */}
+        {/* Elegir nombre profesional (después de PIN correcto) */}
         {ok && (
           <div style={{ marginTop: "1rem" }}>
             <label>
