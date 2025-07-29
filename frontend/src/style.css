@@ -95,3 +95,18 @@ button:focus-visible {
   }
 }
 
+/* RESPONSIVE TABLA - SCROLL HORIZONTAL EN CELULARES */
+@media (max-width: 768px) {
+  table {
+    min-width: 600px;
+  }
+
+  select, input, button {
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 20px;
+    text-align: center;
+  }
+}
