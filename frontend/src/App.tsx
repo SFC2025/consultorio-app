@@ -5,25 +5,11 @@ import { ProfesionalProvider } from "./context/ProfesionalContexto";
 import { useEffect, useState } from "react";
 
 function App() {
-  const [estaLogueado, setEstaLogueado] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const acceso = localStorage.getItem("accesoPermitido");
-    setEstaLogueado(acceso === "true");
-  }, []);
-
-  if (estaLogueado === null) return null; // o un loader si querés
-
   return (
     <ProfesionalProvider>
       <Routes>
         <Route path="/" element={<Registro />} />
-        <Route
-          path="/panelprofesional"
-          element={
-            estaLogueado ? <PanelProfesional /> : <Navigate to="/" />
-          }
-        />
+        <Route path="/panelprofesional" element={<PanelProfesional />} />
       </Routes>
     </ProfesionalProvider>
   );

@@ -3,18 +3,17 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-const verificarPinRoutes = require("./routes/panel.routes");
+const verificarPinRouter = require("./routes/verificarPin"); // ✅ correcto
 const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS restringido a frontend en producción + local dev
 app.use(
   cors({
     origin: [
-      "https://consultorio-app-orcin.vercel.app", // frontend producción
-      "http://localhost:5173",                    // solo para desarrollo local
+      "https://consultorio-app-orcin.vercel.app",
+      "http://localhost:5173",
     ],
   })
 );
@@ -35,14 +34,13 @@ mongoose
     process.exit(1);
   });
 
-// ✅ Ruta pública (PIN)
-app.use("/api", verificarPinRoutes);
+// ✅ Ruta pública (verificación de PIN)
+app.use("/api/verificar-pin", verificarPinRouter);
 
 // ✅ Rutas protegidas
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
 app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
 
-// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

@@ -29,6 +29,58 @@ interface Turno {
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
 const PanelProfesional = () => {
+  const [pinIngresado, setPinIngresado] = useState("");
+const [pinValido, setPinValido] = useState(
+  localStorage.getItem("accesoPermitido") === "true"
+);
+
+useEffect(() => {
+  const verificarPIN = async () => {
+    try {
+      const res = await fetch(`${API_URL}/verificar-pin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinIngresado }),
+      });
+      const data = await res.json();
+      if (data.acceso) {
+        localStorage.setItem("accesoPermitido", "true");
+        setPinValido(true);
+      } else {
+        alert("PIN incorrecto");
+      }
+    } catch (err) {
+      alert("Error al verificar PIN");
+      console.error(err);
+    }
+  };
+
+  if (pinIngresado.length === 4) {
+    verificarPIN();
+  }
+}, [pinIngresado]);
+
+if (!pinValido) {
+  return (
+    <div style={{ padding: "2rem" }}>
+      <h2>🔐 Ingreso restringido</h2>
+      <p>Ingrese el PIN profesional para acceder:</p>
+      <input
+        type="password"
+        value={pinIngresado}
+        onChange={(e) => setPinIngresado(e.target.value)}
+        maxLength={4}
+        style={{
+          padding: "10px",
+          fontSize: "1.2rem",
+          letterSpacing: "8px",
+        }}
+        autoFocus
+      />
+    </div>
+  );
+}
+
   const contexto = useContext(ProfesionalContexto);
 
   if (!contexto) {
