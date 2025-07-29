@@ -5,13 +5,14 @@ import { ProfesionalProvider } from "./context/ProfesionalContexto";
 import { useEffect, useState } from "react";
 
 function App() {
-  const [estaLogueado, setEstaLogueado] = useState(false);
+  const [estaLogueado, setEstaLogueado] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (localStorage.getItem("accesoPermitido") === "true") {
-      setEstaLogueado(true);
-    }
+    const acceso = localStorage.getItem("accesoPermitido");
+    setEstaLogueado(acceso === "true");
   }, []);
+
+  if (estaLogueado === null) return null; // o un loader si querés
 
   return (
     <ProfesionalProvider>
