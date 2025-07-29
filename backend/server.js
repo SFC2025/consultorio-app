@@ -9,30 +9,36 @@ const auth = require("./middleware/auth");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+  })
+);
+
 app.use(express.json());
 
-// (opcional, pero recomendado)
-mongoose.set('bufferCommands', false);
+mongoose.set("bufferCommands", false);
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-})
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+  })
   .then(() => console.log("MongoDB conectado"))
-  .catch(err => {
+  .catch((err) => {
     console.error(err);
     process.exit(1);
   });
 
-// ✅ Ruta sin auth (debe ir primero)
+// ✅ Ruta pública (PIN)
 app.use("/api", verificarPinRoutes);
 
-// ✅ Rutas protegidas (después)
+// ✅ Rutas protegidas
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
 app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
 
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

@@ -47,72 +47,10 @@ const PanelProfesional = () => {
   });
   const [busqueda, setBusqueda] = useState("");
 
-  // BLOQUE DEL PIN
-  const [ok, setOk] = useState(false);
-  const [input, setInput] = useState("");
+
   const [profesionalNombre, setProfesionalNombre] = useState("");
 
-  if (!ok || !profesionalNombre) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h2>Acceso profesionales</h2>
-        <input
-          type="password"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ingresá tu PIN"
-        />
-
-        <button
-          onClick={async () => {
-            try {
-              const res = await fetch(`${API_URL}/verificar-pin`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-api-key": import.meta.env.VITE_API_KEY, // solo si tu backend lo requiere
-                },
-                body: JSON.stringify({ pin: input }),
-              });
-
-              const data = await res.json();
-              if (data.acceso) {
-                setOk(true); // acceso ok
-              } else {
-                alert("PIN incorrecto");
-              }
-            } catch (err) {
-              alert("Error al verificar PIN");
-              console.error(err);
-            }
-          }}
-        >
-          Entrar
-        </button>
-        {/* Elegir nombre profesional (después de PIN correcto) */}
-        {ok && (
-          <div style={{ marginTop: "1rem" }}>
-            <label>
-              Seleccione su nombre profesional:
-              <select
-                value={profesionalNombre}
-                onChange={(e) => setProfesionalNombre(e.target.value)}
-                required
-              >
-                <option value="">-- Seleccione --</option>
-                {profesionalesActivos.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        )}
-      </div>
-    );
-  }
-
+  
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
     `${c.nombre} ${c.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
@@ -131,28 +69,7 @@ const PanelProfesional = () => {
   const [editNombre, setEditNombre] = useState("");
   const [editApellido, setEditApellido] = useState("");
   const [editObraSocial, setEditObraSocial] = useState("");
-  useEffect(() => {
-    if (!ok || !profesionalNombre) return;
 
-    console.log("API_URL:", API_URL);
-    const fetchClientes = async () => {
-      try {
-        const res = await fetch(
-          `${API_URL}/clientes?profesional=${encodeURIComponent(
-            profesionalNombre
-          )}`,
-          { headers: defaultHeaders }
-        );
-        const data = await res.json();
-        console.log("CLIENTES:", data);
-        setClientes(data);
-      } catch (error) {
-        console.error("Error al obtener clientes:", error);
-      }
-    };
-
-    fetchClientes();
-  }, [ok, profesionalNombre]);
 
   useEffect(() => {
     const fetchClientes = async () => {
