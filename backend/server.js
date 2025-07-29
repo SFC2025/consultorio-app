@@ -9,9 +9,13 @@ const auth = require("./middleware/auth");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ✅ CORS restringido a frontend en producción + local dev
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [
+      "https://consultorio-app-orcin.vercel.app", // frontend producción
+      "http://localhost:5173",                    // solo para desarrollo local
+    ],
   })
 );
 
@@ -36,7 +40,7 @@ app.use("/api", verificarPinRoutes);
 
 // ✅ Rutas protegidas
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
-app.use("/api/clientes", require("./routes/clienteRoutes")); // saque `auth` deadelante
+app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
 
 // Iniciar servidor
 app.listen(PORT, () => {

@@ -1,7 +1,6 @@
-// backend/middleware/auth.js
-module.exports = function (req, res, next) {
+module.exports = function validarApiKey(req, res, next) {
   const key = req.header('x-api-key');
-  if (!key || key !== process.env.API_KEY_SUPER) {
+  if (key !== process.env.API_KEY) {
     return res.status(401).json({ error: 'No autorizado' });
   }
   next();

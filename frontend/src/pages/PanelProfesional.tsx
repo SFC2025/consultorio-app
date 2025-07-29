@@ -7,8 +7,9 @@ const API_URL = import.meta.env.VITE_API_URL as string;
 
 const defaultHeaders = {
   "Content-Type": "application/json",
-  // Elimino x-api-key por seguridad
+  "x-api-key": import.meta.env.VITE_API_KEY,
 };
+
 // Tipos para el cliente y turno
 interface Cliente {
   _id: string;
@@ -47,10 +48,8 @@ const PanelProfesional = () => {
   });
   const [busqueda, setBusqueda] = useState("");
 
-
   const [profesionalNombre, setProfesionalNombre] = useState("");
 
-  
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
     `${c.nombre} ${c.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
@@ -69,7 +68,6 @@ const PanelProfesional = () => {
   const [editNombre, setEditNombre] = useState("");
   const [editApellido, setEditApellido] = useState("");
   const [editObraSocial, setEditObraSocial] = useState("");
-
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -237,7 +235,15 @@ const PanelProfesional = () => {
           Seleccione su nombre profesional:
           <select
             value={profesionalNombre}
-            onChange={(e) => setProfesionalNombre(e.target.value)}
+            onChange={(e) => {
+              const nombre = e.target.value;
+              setProfesionalNombre(nombre);
+
+              // 🟢 Guardar acceso válido
+              if (nombre) {
+                localStorage.setItem("accesoPermitido", "true");
+              }
+            }}
             required
             className="form-control"
           >
