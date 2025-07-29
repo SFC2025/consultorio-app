@@ -39,7 +39,7 @@ app.use("/api/verificar-pin", verificarPinRouter);
 
 // ✅ Rutas protegidas
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
-app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
+app.use("/api/clientes", require("./routes/clienteRoutes"));
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
