@@ -36,7 +36,7 @@ app.use("/api", verificarPinRoutes);
 
 // ✅ Rutas protegidas
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
-app.use("/api/clientes", auth, require("./routes/clienteRoutes"));
+app.use("/api/clientes", require("./routes/clienteRoutes")); // saque `auth` deadelante
 
 // Iniciar servidor
 app.listen(PORT, () => {

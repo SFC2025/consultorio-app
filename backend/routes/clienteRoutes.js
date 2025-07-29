@@ -5,7 +5,6 @@ const {
   obtenerCliente,
   actualizarCliente,
   eliminarCliente,
-  normalizarClientes, // DEBE BORRARSE LUEGO
   actualizarNumeroSesion, // <-- IMPORTA ESTA FUNCIÓN
 } = require('../controllers/clienteController');
 
