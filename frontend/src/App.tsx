@@ -1,8 +1,7 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Registro from "./Registro";
 import PanelProfesional from "./pages/PanelProfesional";
 import { ProfesionalProvider } from "./context/ProfesionalContexto";
-import { useEffect, useState } from "react";
 
 function App() {
   return (
