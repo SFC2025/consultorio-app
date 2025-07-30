@@ -206,6 +206,7 @@ const PanelProfesional = () => {
         setMensaje(
           `✅ Diagnóstico guardado para ${data.nombre} ${data.apellido}`
         );
+        setTimeout(() => setMensaje(""), 3000);
         setClientes((prev) =>
           prev.map((c) =>
             c._id === clienteActivo._id
@@ -270,15 +271,7 @@ const PanelProfesional = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        backgroundColor: "#f9fafb",
-        minHeight: "100vh",
-        fontFamily: "Inter, sans-serif",
-        lineHeight: "1.5",
-      }}
-    >
+    <div className="contenedor-general">
       <h1>🩺 Panel de Profesionales</h1>
       {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
       {/* 🔽 SELECT de profesional */}
@@ -319,17 +312,8 @@ const PanelProfesional = () => {
         className="form-control"
       />
 
-      <div style={{ overflowX: "auto", width: "100%" }}>
-        <table
-          style={{
-            width: "100%",
-            marginTop: "20px",
-            borderCollapse: "collapse",
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
-          }}
-        >
+      <div className="tabla-responsive">
+        <table className="tabla-pacientes">
           <thead>
             <tr>
               <th style={thStyle}>Nombre</th>
@@ -350,7 +334,7 @@ const PanelProfesional = () => {
                     <>
                       <input
                         type="number"
-                        value={nuevoNumeroSesion}
+                        value={nuevoNumeroSesion ?? 0}
                         onChange={(e) =>
                           setNuevoNumeroSesion(Number(e.target.value))
                         }
@@ -359,6 +343,7 @@ const PanelProfesional = () => {
                       <button
                         onClick={async () => {
                           try {
+                            console.log("headers enviados:", defaultHeaders);
                             const res = await fetch(
                               `${API_URL}/clientes/${c._id}/sesion`,
                               {
@@ -379,6 +364,8 @@ const PanelProfesional = () => {
                                     : cl
                                 )
                               );
+                              setMensaje("✅ Sesión actualizada con éxito");
+                              setTimeout(() => setMensaje(""), 3000);
                               setEditandoSesion(null);
                             } else {
                               alert(`Error: ${data.error}`);
@@ -404,7 +391,7 @@ const PanelProfesional = () => {
                       <button
                         onClick={() => {
                           setEditandoSesion(c._id);
-                          setNuevoNumeroSesion(c.numeroSesion);
+                          setNuevoNumeroSesion(c.numeroSesion ?? 0);
                         }}
                         className="btn-outline"
                       >
@@ -539,18 +526,7 @@ const PanelProfesional = () => {
 
       {clienteActivo && (
         <>
-          <form
-            onSubmit={enviarDiagnostico}
-            style={{
-              background: "white",
-              width: "100%",
-              maxWidth: "450px",
-              margin: "0 auto",
-              padding: "1rem",
-              marginTop: "30px",
-              borderRadius: "12px",
-            }}
-          >
+          <form onSubmit={enviarDiagnostico} className="form-diagnostico">
             <h3>Registrar Diagnóstico</h3>
             <p>
               <strong>Nombre:</strong> {clienteActivo.nombre}
@@ -568,13 +544,7 @@ const PanelProfesional = () => {
               value={profesionalNombre}
               onChange={(e) => setProfesionalNombre(e.target.value)}
               required
-              style={{
-                width: "100%",
-                padding: "8px",
-                marginBottom: "10px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-              }}
+              className="form-control"
             >
               <option value="">Seleccione profesional</option>
               {profesionalesActivos.map((p) => (
@@ -599,17 +569,7 @@ const PanelProfesional = () => {
               className="form-control"
             />
 
-            <button
-              type="submit"
-              style={{
-                marginTop: "10px",
-                backgroundColor: "#2563eb",
-                color: "white",
-                padding: "10px",
-                border: "none",
-                borderRadius: "6px",
-              }}
-            >
+            <button type="submit" className="btn">
               Guardar Diagnóstico
             </button>
           </form>
@@ -733,15 +693,7 @@ const PanelProfesional = () => {
                           </button>
                           <button
                             onClick={() => borrarDiagnostico(t._id)}
-                            style={{
-                              marginLeft: "8px",
-                              background: "red",
-                              color: "white",
-                              border: "none",
-                              padding: "4px 8px",
-                              cursor: "pointer",
-                              borderRadius: "4px",
-                            }}
+                            className="btn-rojo"
                           >
                             🗑 Borrar
                           </button>

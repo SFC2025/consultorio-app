@@ -1,3 +1,15 @@
+/* Asegura que el contenido no exceda el ancho del viewport */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
 .btn {
   padding: 6px 12px;
   border-radius: 6px;
@@ -42,4 +54,55 @@ td button {
   border: 1px solid #ccc;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+.form-diagnostico {
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  margin: 30px auto 0 auto;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.form-diagnostico .btn {
+  margin-top: 10px;
+}
+
+.tabla-pacientes {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-pacientes tbody tr:nth-child(even) {
+  background-color: #f0f4f8;
+}
+
+.tabla-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.contenedor-general {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  line-height: 1.5;
+}
+
+.btn-rojo {
+  margin-left: 8px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
 }

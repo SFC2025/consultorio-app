@@ -69,12 +69,11 @@ function Registro() {
         onSubmit={handleRegistrarCliente}
         style={{
           background: "rgba(255,255,255,0.95)",
-          width: "100%",
-          maxWidth: "450px",
-          margin: "0 auto",
-          padding: "1rem",
+          padding: "24px",
           borderRadius: "16px",
           boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+          maxWidth: "400px",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           gap: "12px",
