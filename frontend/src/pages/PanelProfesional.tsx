@@ -579,7 +579,12 @@ const PanelProfesional = () => {
               Guardar Diagnóstico
             </button>
           </form>
-
+          {/* 👇 Mostrar mensaje si no hay diagnósticos aún */}
+          {clienteActivo && historial.length === 0 && (
+            <p style={{ marginTop: "1rem", color: "#666" }}>
+              Este paciente aún no tiene diagnósticos registrados.
+            </p>
+          )}
           {historial.length > 0 && (
             <div
               style={{
