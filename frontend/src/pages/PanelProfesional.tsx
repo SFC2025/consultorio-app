@@ -185,6 +185,7 @@ const PanelProfesional = () => {
     });
 
     try {
+      alert("Guardando diagnóstico con API KEY: " + import.meta.env.VITE_API_KEY);
       const res = await fetch(`${API_URL}/turnos`, {
         method: "POST",
         headers: defaultHeaders,
@@ -345,6 +346,7 @@ const PanelProfesional = () => {
                         onClick={async () => {
                           try {
                             console.log("headers enviados:", defaultHeaders);
+                            alert("Editando sesión con API KEY: " + import.meta.env.VITE_API_KEY);
                             const res = await fetch(
                               `${API_URL}/clientes/${c._id}/sesion`,
                               {
