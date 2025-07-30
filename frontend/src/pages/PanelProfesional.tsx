@@ -389,11 +389,17 @@ const PanelProfesional = () => {
                     <>
                       {c.numeroSesion}
                       <button
+                        type="button"
                         onClick={() => {
                           setEditandoSesion(c._id);
                           setNuevoNumeroSesion(c.numeroSesion ?? 0);
                         }}
                         className="btn-outline"
+                        style={{
+                          border: "1px solid #ccc",
+                          borderRadius: "6px",
+                          padding: "4px",
+                        }}
                       >
                         ✏️
                       </button>
