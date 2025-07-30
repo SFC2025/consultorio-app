@@ -126,14 +126,6 @@ button:focus-visible {
 
 .contenedor-form {
   width: 100%;
-  max-width: 450px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.contenedor-form {
-  width: 100%;
-  max-width: 450px;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -146,6 +138,9 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 90%;
+  max-width: 450px;
+  margin: 0 auto;
 }
 
 .form-registro input,
@@ -169,4 +164,11 @@ button:focus-visible {
   color: green;
   text-align: center;
   margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  form {
+    max-width: 320px !important;
+    padding: 16px !important;
+  }
 }

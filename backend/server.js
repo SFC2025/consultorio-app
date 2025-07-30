@@ -19,10 +19,14 @@ const corsOptions = {
       "https://kinesiaconsultorio.onrender.com",
     ];
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // Permitir acceso
+    if (
+      !origin ||
+      origin.includes("localhost") ||
+      allowedOrigins.includes(origin)
+    ) {
+      callback(null, true);
     } else {
-      callback(new Error("No permitido por CORS"));
+      callback(new Error("No permitido por CORS: " + origin));
     }
   },
   credentials: true,
