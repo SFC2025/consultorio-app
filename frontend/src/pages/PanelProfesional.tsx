@@ -185,6 +185,7 @@ const PanelProfesional = () => {
     });
 
     try {
+      alert("API KEY usada en POST /turnos: " + import.meta.env.VITE_API_KEY);
       const res = await fetch(`${API_URL}/turnos`, {
         method: "POST",
         headers: defaultHeaders,
@@ -231,6 +232,7 @@ const PanelProfesional = () => {
       return;
 
     try {
+      alert("API KEY usada: " + import.meta.env.VITE_API_KEY);
       const res = await fetch(`${API_URL}/turnos/${id}`, {
         method: "DELETE",
         headers: defaultHeaders,
