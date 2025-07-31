@@ -121,7 +121,12 @@ const historialPorClienteYProfesional = async (req, res) => {
     const filter = { clienteId };
     if (profesional) filter.profesional = profesional;
 
-    const historial = await Turno.find(filter).sort({ fechaHora: -1 });
+    const historial = await Turno.find(filter)
+      .sort({ fechaHora: -1 })
+      .select(
+        "nombre apellido obraSocial diagnostico profesional numeroSesion fechaHora"
+      );
+
     res.json(historial);
   } catch (error) {
     console.error("Error al cargar historial:", error);

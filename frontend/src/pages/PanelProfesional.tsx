@@ -24,6 +24,7 @@ interface Turno {
   fechaHora: string;
   diagnostico: string;
   profesional: string;
+  numeroSesion: number;
 }
 // Capitaliza la primera letra de un texto
 const capitalizar = (texto: string): string =>
@@ -195,6 +196,7 @@ const PanelProfesional = () => {
           obraSocial: clienteActivo.obraSocial,
           diagnostico,
           profesional: profesionalNombre,
+          numeroSesion: clienteActivo.numeroSesion + 1,
           fechaHora: new Date(
             `${fechaSesion}T${new Date().toTimeString().split(" ")[0]}`
           ).toISOString(),
@@ -617,12 +619,21 @@ const PanelProfesional = () => {
                     </p>
 
                     <p>
+                      <strong>👤 Paciente:</strong> {clienteActivo?.nombre}{" "}
+                      {clienteActivo?.apellido}
+                    </p>
+
+                    <p>
+                      <strong>📘 Sesión Nº:</strong> {t.numeroSesion}
+                    </p>
+
+                    <p>
                       <strong>👩‍⚕️ Profesional:</strong> {t.profesional}
                     </p>
+
                     <p>
                       <strong>📋 Diagnóstico:</strong>{" "}
-                      {modoEditarDiagnostico &&
-                      turnoEditando?._id === (t as any)._id ? (
+                      {modoEditarDiagnostico && turnoEditando?._id === t._id ? (
                         <>
                           <textarea
                             value={diagnosticoEditado}
@@ -640,7 +651,7 @@ const PanelProfesional = () => {
                               onClick={async () => {
                                 try {
                                   const res = await fetch(
-                                    `${API_URL}/turnos/${(t as any)._id}`,
+                                    `${API_URL}/turnos/${t._id}`,
                                     {
                                       method: "PUT",
                                       headers: defaultHeaders,
@@ -655,7 +666,7 @@ const PanelProfesional = () => {
                                     setMensaje("✅ Diagnóstico actualizado");
                                     setHistorial((prev) =>
                                       prev.map((turno) =>
-                                        (turno as any)._id === (t as any)._id
+                                        turno._id === t._id
                                           ? {
                                               ...turno,
                                               diagnostico: diagnosticoEditado,
@@ -711,7 +722,6 @@ const PanelProfesional = () => {
                         </>
                       )}
                     </p>
-
                     <hr style={{ marginTop: "10px" }} />
                   </li>
                 ))}
