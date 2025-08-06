@@ -273,7 +273,7 @@ const PanelProfesional = () => {
   };
 
   return (
-    <div className="contenedor-general">
+    <div className="contenedor-general fondo-panel">
       <h1>🩺 Panel de Profesionales</h1>
       {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
       {/* 🔽 SELECT de profesional */}
