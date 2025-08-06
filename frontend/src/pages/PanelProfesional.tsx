@@ -583,7 +583,7 @@ const PanelProfesional = () => {
           </form>
           {/* 👇 Mostrar mensaje si no hay diagnósticos aún */}
           {clienteActivo && historial.length === 0 && (
-            <p style={{ marginTop: "1rem", color: "#666" }}>
+            <p style={{ marginTop: "1rem", color: "white" }}>
               Este paciente aún no tiene diagnósticos registrados.
             </p>
           )}
