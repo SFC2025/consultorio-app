@@ -1,8 +1,86 @@
 const Turno = require("../models/turnoModel");
 const Cliente = require("../models/clienteModel");
+const cloudinary = require("../utils/cloudinary");
+
+// Subir imagen a Cloudinary y guardar URL en el turno
+const subirImagenTurno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validaciones básicas
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No se recibió archivo de imagen" });
+    }
+
+    // Subir a Cloudinary desde buffer
+
+    const resultado = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "kinesia/turnos",
+
+          resource_type: "image",
+
+          // transformations opcionales: width, height, crop, quality, etc
+        },
+
+        (error, result) => {
+          if (error) return reject(error);
+
+          resolve(result);
+        }
+      );
+
+      stream.end(req.file.buffer);
+    });
+
+    // Guardar URL y public_id en el turno
+
+    const actualizado = await Turno.findByIdAndUpdate(
+      id,
+      { imagenUrl: resultado.secure_url, imagenPublicId: resultado.public_id },
+      { new: true }
+    );
+    if (!actualizado) {
+      return res.status(404).json({ error: "Turno no encontrado" });
+    }
+    res.json({
+      mensaje: "Imagen subida correctamente",
+      turno: actualizado,
+    });
+  } catch (error) {
+    console.error("Error al subir imagen:", error);
+    res.status(500).json({ error: "No se pudo subir la imagen" });
+  }
+};
+// Borrar imagen asociada al turno (en Cloudinary y en Mongo)
+const borrarImagenTurno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const turno = await Turno.findById(id);
+    if (!turno) return res.status(404).json({ error: "Turno no encontrado" });
+
+    // Si hay imagen previa, eliminar de Cloudinary
+    if (turno.imagenPublicId) {
+      await cloudinary.uploader.destroy(turno.imagenPublicId);
+    }
+
+    turno.imagenUrl = "";
+    turno.imagenPublicId = "";
+    await turno.save();
+
+    res.json({ mensaje: "Imagen eliminada correctamente", turno });
+  } catch (error) {
+    console.error("Error al borrar imagen:", error);
+    res.status(500).json({ error: "No se pudo borrar la imagen" });
+  }
+};
 
 const crearTurno = async (req, res) => {
-  const { clienteId, diagnostico, profesional, fechaHora } = req.body; // <-- fechaHora
+  const { clienteId, diagnostico, profesional, fechaHora, tratamiento } =
+    req.body; // <-- fechaHora
 
   try {
     if (!clienteId || !profesional) {
@@ -26,6 +104,8 @@ const crearTurno = async (req, res) => {
       profesional,
       fechaHora: fechaHora || new Date(), // <-- usa fechaHora
       numeroSesion: cliente.numeroSesion,
+      tratamiento: tratamiento || "", // agregado
+      // imagenUrl/imagenPublicId se setean cuando subís la imagen por el endpoint específico
     });
 
     await nuevoTurno.save();
@@ -43,13 +123,30 @@ const crearTurno = async (req, res) => {
 };
 
 // Listar todos los turnos
+// GET /api/turnos?profesional=...&dia=YYYY-MM-DD
 const listarTurnos = async (req, res) => {
   try {
-    const turnos = await Turno.find().populate("clienteId").sort({ fecha: -1 });
+    const { profesional, dia } = req.query;
+
+    const q = {};
+    if (profesional) {
+      q.profesional = { $regex: `^${profesional}$`, $options: "i" };
+    }
+
+    if (dia) {
+      const [y, m, d] = dia.split("-").map(Number);
+      const start = new Date(y, m - 1, d, 0, 0, 0, 0); // local 00:00
+      const end = new Date(y, m - 1, d, 23, 59, 59, 999); // local 23:59
+      q.fechaHora = { $gte: start, $lte: end };
+    }
+
+    const turnos = await Turno.find(q)
+      .sort({ fechaHora: -1, createdAt: -1 })
+      .lean();
     res.json(turnos);
-  } catch (error) {
-    console.error("Error al listar turnos:", error);
-    res.status(500).json({ error: "Error al obtener turnos" });
+  } catch (err) {
+    console.error("Error listarTurnos:", err);
+    res.status(500).json({ error: "Error al listar turnos" });
   }
 };
 
@@ -68,18 +165,33 @@ const obtenerTurno = async (req, res) => {
 // Actualizar turno completo
 const actualizarTurno = async (req, res) => {
   try {
-    const { diagnostico, profesional, fecha } = req.body;
+    const allowed = [
+      "diagnostico",
+      "profesional",
+      "fechaHora",
+      "tratamiento",
+      "obraSocial",
+      "numeroSesion",
+      "nombre",
+      "apellido",
+    ];
+
+    const data = {};
+    for (const k of allowed) if (k in req.body) data[k] = req.body[k];
+
     const turnoActualizado = await Turno.findByIdAndUpdate(
       req.params.id,
-      { diagnostico, profesional, fecha },
-      { new: true }
+      data,
+      { new: true, runValidators: true }
     );
-    if (!turnoActualizado)
+
+    if (!turnoActualizado) {
       return res.status(404).json({ error: "Turno no encontrado" });
+    }
 
     res.json({ mensaje: "Turno actualizado", turno: turnoActualizado });
-  } catch (error) {
-    console.error("Error al actualizar turno:", error);
+  } catch (e) {
+    console.error("Error al actualizar turno:", e);
     res.status(500).json({ error: "Error del servidor" });
   }
 };
@@ -160,4 +272,6 @@ module.exports = {
   eliminarTurno,
   actualizarDiagnostico,
   historialPorClienteYProfesional,
+  subirImagenTurno, // nuevo
+  borrarImagenTurno, // opcional
 };

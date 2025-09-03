@@ -1,10 +1,14 @@
-import { createContext, useState, type ReactNode } from "react";
+import { createContext, useEffect, useState, type ReactNode } from "react";
 
 type ProfesionalContextType = {
   profesionalesActivos: string[];
+  selectedProfesional: string;
+  setSelectedProfesional: (s: string) => void;
 };
 
-export const ProfesionalContexto = createContext<ProfesionalContextType | null>(null);
+export const ProfesionalContexto = createContext<ProfesionalContextType | null>(
+  null
+);
 
 export const ProfesionalProvider = ({ children }: { children: ReactNode }) => {
   const [profesionalesActivos] = useState<string[]>([
@@ -14,8 +18,22 @@ export const ProfesionalProvider = ({ children }: { children: ReactNode }) => {
     "Jose Maximino - Quiropráctico",
   ]);
 
+  const [selectedProfesional, setSelectedProfesional] = useState<string>(() => {
+    return localStorage.getItem("selectedProfesional") || "";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("selectedProfesional", selectedProfesional);
+  }, [selectedProfesional]);
+
   return (
-    <ProfesionalContexto.Provider value={{ profesionalesActivos }}>
+    <ProfesionalContexto.Provider
+      value={{
+        profesionalesActivos,
+        selectedProfesional,
+        setSelectedProfesional,
+      }}
+    >
       {children}
     </ProfesionalContexto.Provider>
   );

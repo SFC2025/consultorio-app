@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-const verificarPinRouter = require("./routes/verificarPin"); // ✅ correcto
+const verificarPinRouter = require("./routes/verificarPin"); 
 const auth = require("./middleware/auth");
 
 const app = express();
@@ -33,7 +33,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
 mongoose.set("bufferCommands", false);
@@ -42,17 +41,19 @@ mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,
   })
-
   .then(() => console.log("MongoDB conectado"))
   .catch((err) => {
     console.error(err);
     process.exit(1);
   });
 
-// ✅ Ruta pública (verificación de PIN)
+/* ✅ Ruta pública de prueba */
+app.get("/api/ping", (_req, res) => res.send("pong"));
+
+/* ✅ Ruta pública (verificación de PIN) */
 app.use("/api/verificar-pin", verificarPinRouter);
 
-// ✅ Rutas protegidas
+/* ✅ Rutas protegidas */
 app.use("/api/turnos", auth, require("./routes/turnoRoutes"));
 app.use("/api/clientes", require("./routes/clienteRoutes"));
 

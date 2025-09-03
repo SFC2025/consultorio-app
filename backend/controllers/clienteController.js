@@ -1,4 +1,5 @@
 const Cliente = require("../models/clienteModel");
+const Turno = require("../models/turnoModel");
 
 // Crear cliente (único por nombre y apellido)
 const crearCliente = async (req, res) => {
@@ -97,16 +98,24 @@ const actualizarCliente = async (req, res) => {
   }
 };
 
-// Eliminar cliente
+// Eliminar cliente + TODOS sus turnos (cascada)
 const eliminarCliente = async (req, res) => {
   try {
-    const eliminado = await Cliente.findByIdAndDelete(req.params.id);
-    if (!eliminado)
+    const { id } = req.params;
+
+    const cli = await Cliente.findById(id);
+    if (!cli) {
       return res.status(404).json({ error: "Cliente no encontrado" });
-    res.json({ mensaje: "Cliente eliminado" });
+    }
+
+    await Turno.deleteMany({ clienteId: id });
+
+    await Cliente.deleteOne({ _id: id });
+
+    return res.json({ ok: true, deletedClientId: id });
   } catch (err) {
     console.error("Error al eliminar cliente:", err);
-    res.status(500).json({ error: "Error del servidor" });
+    return res.status(500).json({ error: "Error del servidor" });
   }
 };
 
@@ -134,5 +143,5 @@ module.exports = {
   obtenerCliente,
   actualizarCliente,
   eliminarCliente,
-  actualizarNumeroSesion, // <-- AGREGUE ESTA FUNCIÓN
+  actualizarNumeroSesion, // <-- AGREGUÉ ESTA FUNCIÓN
 };

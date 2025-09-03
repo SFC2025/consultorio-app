@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Dependencias
+**/node_modules/
 node_modules/
 
 # Build output
@@ -39,3 +40,26 @@ vite.svg
 
 # ESLint / Prettier
 .eslintcache
+
+# Ignorar TODOS los .env en cualquier carpeta
+**/.env
+**/.env.*
+!**/.env.example   # (dejá trackeado un template si querés)
+
+# Subidas/local caches temporales (por si aparecen)
+**/uploads/
+**/storage/
+**/tmp/
+**/.cache/
+
+# Claves/Certs locales
+*.pem
+*.key
+
+# Tests/coverage (si los generás)
+coverage/
+cypress/screenshots/
+cypress/videos/
+
+# Basura de SO (por si falta en subcarpetas)
+Thumbs.db

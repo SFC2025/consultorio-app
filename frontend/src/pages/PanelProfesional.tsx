@@ -2,12 +2,20 @@ import React, { useEffect, useState } from "react";
 import "./panelProfesional.css";
 import { useContext } from "react";
 import { ProfesionalContexto } from "../context/ProfesionalContexto";
+import Confirm from "../components/Confirm";
+import "../components/confirm.css";
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 const defaultHeaders = {
   "Content-Type": "application/json",
   "x-api-key": import.meta.env.VITE_API_KEY,
+};
+type ConfirmState = { open: boolean; message: string; onConfirm: () => void };
+const initialConfirm: ConfirmState = {
+  open: false,
+  message: "",
+  onConfirm: () => {},
 };
 
 // Tipos para el cliente y turno
@@ -83,13 +91,10 @@ const PanelProfesional = () => {
   }
 
   const contexto = useContext(ProfesionalContexto);
+  if (!contexto) return <p>Error cargando contexto.</p>;
+  const { profesionalesActivos, selectedProfesional, setSelectedProfesional } =
+    contexto;
 
-  if (!contexto) {
-    console.error("Contexto nulo en PanelProfesional");
-    return <p>Error cargando contexto.</p>;
-  }
-
-  const { profesionalesActivos } = contexto;
   console.log("Profesionales del contexto:", profesionalesActivos);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
@@ -100,8 +105,6 @@ const PanelProfesional = () => {
     return hoy;
   });
   const [busqueda, setBusqueda] = useState("");
-
-  const [profesionalNombre, setProfesionalNombre] = useState("");
 
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
@@ -114,8 +117,9 @@ const PanelProfesional = () => {
   const [modoEditarDiagnostico, setModoEditarDiagnostico] = useState(false);
   const [turnoEditando, setTurnoEditando] = useState<Turno | null>(null);
   const [diagnosticoEditado, setDiagnosticoEditado] = useState("");
+  const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
 
-  // 🛠 Estados para edición de cliente
+  // Estados para edición de cliente
   const [modoEdicion, setModoEdicion] = useState(false);
   const [editandoCliente, setEditandoCliente] = useState<Cliente | null>(null);
   const [editNombre, setEditNombre] = useState("");
@@ -124,41 +128,30 @@ const PanelProfesional = () => {
 
   useEffect(() => {
     const fetchClientes = async () => {
-      if (!profesionalNombre) return;
+      if (!selectedProfesional) return;
       try {
-        console.log("Profesional seleccionado:", profesionalNombre);
-        console.log(
-          "URL:",
-          `${API_URL}/clientes?profesional=${encodeURIComponent(
-            profesionalNombre
-          )}`
-        );
-
         const res = await fetch(
           `${API_URL}/clientes?profesional=${encodeURIComponent(
-            profesionalNombre
-          )}`,
-          { headers: defaultHeaders }
+            selectedProfesional
+          )}`
         );
-
         const data = await res.json();
-        console.log("👥 Clientes recibidos:", data);
         setClientes(data);
-        setHistorial([]); // limpia historial
+        setHistorial([]);
         setClienteActivo(null);
       } catch (err) {
         alert("❌ No se pudo obtener la lista de pacientes");
-        console.error("Error al cargar pacientes", err);
+        console.error(err);
       }
     };
     fetchClientes();
-  }, [profesionalNombre]);
+  }, [selectedProfesional]);
 
   const cargarHistorial = async (clienteId: string) => {
     try {
       const res = await fetch(
         `${API_URL}/turnos/historial/${clienteId}?profesional=${encodeURIComponent(
-          profesionalNombre
+          selectedProfesional
         )}`,
         { headers: defaultHeaders }
       );
@@ -181,7 +174,7 @@ const PanelProfesional = () => {
       apellido: clienteActivo.apellido,
       obraSocial: clienteActivo.obraSocial,
       diagnostico,
-      profesional: profesionalNombre,
+      profesional: selectedProfesional,
       fecha: fechaSesion,
     });
 
@@ -195,7 +188,7 @@ const PanelProfesional = () => {
           apellido: clienteActivo.apellido,
           obraSocial: clienteActivo.obraSocial,
           diagnostico,
-          profesional: profesionalNombre,
+          profesional: selectedProfesional,
           numeroSesion: clienteActivo.numeroSesion + 1,
           fechaHora: new Date(
             `${fechaSesion}T${new Date().toTimeString().split(" ")[0]}`
@@ -227,9 +220,11 @@ const PanelProfesional = () => {
     }
   };
 
-  // ✅ Esto va afuera de enviarDiagnostico
+  // Ubiqué afuera de enviarDiagnostico
   const borrarDiagnostico = async (id: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este diagnóstico?"))
+    if (
+      !window.confirm("¿Estás seguro de que deseas eliminar este diagnóstico?")
+    )
       return;
 
     try {
@@ -260,7 +255,27 @@ const PanelProfesional = () => {
       alert("No se pudo borrar el diagnóstico");
     }
   };
+  const borrarPaciente = async (c: Cliente) => {
+    try {
+      const res = await fetch(`${API_URL}/clientes/${c._id}`, {
+        method: "DELETE",
+        headers: defaultHeaders,
+      });
+      const js = await res.json();
+      if (!res.ok) throw new Error(js?.error || "Error al eliminar paciente");
 
+      setClientes((prev) => prev.filter((x) => x._id !== c._id));
+      if (clienteActivo?._id === c._id) {
+        setClienteActivo(null);
+        setHistorial([]);
+      }
+      setMensaje("🗑️ Paciente eliminado");
+      setTimeout(() => setMensaje(""), 1500);
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo eliminar el paciente");
+    }
+  };
   const thStyle: React.CSSProperties = {
     textAlign: "left",
     padding: "10px",
@@ -281,27 +296,21 @@ const PanelProfesional = () => {
         <label>
           Seleccione su nombre profesional:
           <select
-            value={profesionalNombre}
+            value={selectedProfesional}
             onChange={(e) => {
               const nombre = e.target.value;
-              setProfesionalNombre(nombre);
-
-              // 🟢 Guardar acceso válido
-              if (nombre) {
-                localStorage.setItem("accesoPermitido", "true");
-              }
+              setSelectedProfesional(nombre);
+              if (nombre) localStorage.setItem("accesoPermitido", "true");
             }}
             required
             className="form-control"
           >
             <option value="">-- Seleccione --</option>
-            {profesionalesActivos?.map((p, i) =>
-              p ? (
-                <option key={i} value={p}>
-                  {p}
-                </option>
-              ) : null
-            )}
+            {profesionalesActivos?.map((p, i) => (
+              <option key={i} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -323,8 +332,10 @@ const PanelProfesional = () => {
               <th style={thStyle}>Obra Social</th>
               <th style={thStyle}>Sesiones</th>
               <th style={thStyle}>Diagnóstico</th>
+              <th style={thStyle}>Acciones</th>
             </tr>
           </thead>
+
           <tbody>
             {clientesFiltrados.map((c) => (
               <tr key={c._id}>
@@ -350,7 +361,7 @@ const PanelProfesional = () => {
                               `${API_URL}/clientes/${c._id}/sesion`,
                               {
                                 method: "PUT",
-                                headers: defaultHeaders,
+                                headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
                                   numeroSesion: nuevoNumeroSesion,
                                 }),
@@ -409,6 +420,7 @@ const PanelProfesional = () => {
                   )}
                 </td>
 
+                {/* Columna "Diagnóstico" */}
                 <td style={tdStyle}>
                   <button
                     onClick={() => {
@@ -420,6 +432,10 @@ const PanelProfesional = () => {
                   >
                     🩺 Diagnóstico
                   </button>
+                </td>
+
+                {/* Columna "Acciones" */}
+                <td style={tdStyle}>
                   <button
                     onClick={() => {
                       setEditandoCliente(c);
@@ -431,6 +447,20 @@ const PanelProfesional = () => {
                     className="btn-outline"
                   >
                     ✏️ Editar
+                  </button>
+
+                  <button
+                    className="btn-rojo"
+                    style={{ marginLeft: 8 }}
+                    onClick={() =>
+                      setConfirm({
+                        open: true,
+                        message: `¿Eliminar al paciente ${c.nombre} ${c.apellido} y todos sus turnos?`,
+                        onConfirm: () => borrarPaciente(c),
+                      })
+                    }
+                  >
+                    🗑 Eliminar paciente
                   </button>
                 </td>
               </tr>
@@ -447,7 +477,7 @@ const PanelProfesional = () => {
                 `${API_URL}/clientes/${editandoCliente._id}`,
                 {
                   method: "PUT",
-                  headers: defaultHeaders,
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     nombre: editNombre,
                     apellido: editApellido,
@@ -549,8 +579,8 @@ const PanelProfesional = () => {
               <strong>Sesión Nº:</strong> {clienteActivo.numeroSesion + 1}
             </p>
             <select
-              value={profesionalNombre}
-              onChange={(e) => setProfesionalNombre(e.target.value)}
+              value={selectedProfesional}
+              onChange={(e) => setSelectedProfesional(e.target.value)}
               required
               className="form-control"
             >
@@ -561,6 +591,7 @@ const PanelProfesional = () => {
                 </option>
               ))}
             </select>
+
             <input
               type="date"
               value={fechaSesion}
@@ -581,7 +612,7 @@ const PanelProfesional = () => {
               Guardar Diagnóstico
             </button>
           </form>
-          {/* 👇 Mostrar mensaje si no hay diagnósticos aún */}
+          {/* Mostrar mensaje si no hay diagnósticos aún */}
           {clienteActivo && historial.length === 0 && (
             <p style={{ marginTop: "1rem", color: "white" }}>
               Este paciente aún no tiene diagnósticos registrados.
@@ -730,6 +761,13 @@ const PanelProfesional = () => {
           )}
         </>
       )}
+      <Confirm
+        open={confirm.open}
+        message={confirm.message}
+        confirmText="Eliminar paciente"
+        onConfirm={confirm.onConfirm}
+        onClose={() => setConfirm((v) => ({ ...v, open: false }))}
+      />
     </div>
   );
 };

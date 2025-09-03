@@ -1,0 +1,94 @@
+/* Formulario tipo Excel */
+.tabla-agenda {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tabla-agenda th,
+.tabla-agenda td {
+  border: 1px solid #eee;
+  padding: 10px;
+  font-size: 14px;
+}
+.tabla-agenda thead th {
+  background: #f7f7f9;
+  font-weight: 600;
+  text-align: left;
+}
+
+.tabla-agenda th:nth-child(1),
+.tabla-agenda td:nth-child(1) {
+  width: 110px; 
+}
+
+.fila-editable:hover {
+  background: #fcfcff;
+}
+.input-celda {
+  width: 100%;
+  border: 1px solid transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  outline: none;
+}
+.input-celda:focus {
+  border-color: #8aa8ff;
+  background: #f6f8ff;
+}
+.btn-sm {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.btn-sm.primary { background: #2563eb; color: #fff; }
+.btn-sm.gray    { background: #e5e7eb; color: #111827; }
+.btn-sm.danger  { background: #ef4444; color: #fff; }
+
+.grid-filtros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(200px, 260px));
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.help {
+  font-size: 14px;
+  color: #000000;
+  margin-bottom: 8px;
+}
+
+.grupo-separador {
+  background: #f3f4f6;
+  font-weight: 700;
+  color: #374151;
+}
+
+.grupo-cabecera {
+  background: #eef6ff;
+  font-weight: 700;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 8px 12px;
+  padding-left: calc(12px + 110px); 
+}
+
+.grupo-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.grupo-badge {
+  font-size: 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+
