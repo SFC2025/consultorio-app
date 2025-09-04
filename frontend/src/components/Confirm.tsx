@@ -1,39 +1,49 @@
+// frontend/src/components/Confirm.tsx
 import "./confirm.css";
 
-type Props = {
+type ConfirmProps = {
   open: boolean;
-  title?: string;
   message: string;
   confirmText?: string;
-  cancelText?: string;
   onConfirm: () => void;
   onClose: () => void;
 };
 
 export default function Confirm({
   open,
-  title = "Confirmar acción",
   message,
-  confirmText = "Eliminar",
-  cancelText = "Cancelar",
+  confirmText = "Confirmar",
   onConfirm,
   onClose,
-}: Props) {
+}: ConfirmProps) {
   if (!open) return null;
+
+  const handleKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") onClose();
+  };
+
   return (
-    <div className="cfm-overlay" onClick={onClose}>
-      <div className="cfm-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 className="cfm-title">{title}</h3>
-        <p className="cfm-msg">{message}</p>
-        <div className="cfm-actions">
-          <button className="btn-outline" onClick={onClose}>
-            {cancelText}
+    <div
+      className="confirm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirmación"
+      onKeyDown={handleKey}
+    >
+      <div className="confirm-card">
+        <p className="confirm-message">{message}</p>
+        <div className="confirm-actions">
+          <button className="btn btn-cancel" onClick={onClose} autoFocus>
+            Cancelar
           </button>
           <button
-            className="btn-rojo"
+            className="btn btn-confirm"
             onClick={() => {
-              onConfirm();
-              onClose();
+              try {
+                onConfirm();
+              } finally {
+                onClose();
+              }
             }}
           >
             {confirmText}
