@@ -5,7 +5,7 @@ import { useContext } from "react";
 import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_URL = (import.meta.env.VITE_API_URL as string) || "";
 const defaultHeaders: HeadersInit = {
   "x-api-key": import.meta.env.VITE_API_KEY,
 };
@@ -82,6 +82,20 @@ const AgendaDiaria: React.FC = () => {
   const [combinarPorPaciente, setCombinarPorPaciente] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
   const [busqueda, setBusqueda] = useState("");
+  if (!API_URL) {
+    console.error(
+      "VITE_API_URL no está definido. Configurá la variable en Vercel."
+    );
+    return (
+      <div className="contenedor-general fondo-panel">
+        <h1>📅 Agenda Diaria</h1>
+        <div className="toast" style={{ background: "#fee", color: "#900" }}>
+          Falta configurar <code>VITE_API_URL</code> en el entorno de
+          producción.
+        </div>
+      </div>
+    );
+  }
 
   // 🔎 Buscador de paciente
 
@@ -103,6 +117,16 @@ const AgendaDiaria: React.FC = () => {
   }, [selectedProfesional]);
 
   useEffect(() => {
+    if (
+      !selectedProfesional &&
+      !profesional &&
+      profesionalesActivos.length > 0
+    ) {
+      setProfesional(profesionalesActivos[0]); // primer profesional activo
+    }
+  }, [selectedProfesional, profesional, profesionalesActivos]);
+
+  useEffect(() => {
     const fetchTurnos = async () => {
       if (!profesional || !dia) {
         setTurnos([]); //  si faltan filtros, vacio
@@ -114,12 +138,21 @@ const AgendaDiaria: React.FC = () => {
         const url = `${API_URL}/turnos?profesional=${encodeURIComponent(
           profesional
         )}`;
+        console.log("[Agenda] GET:", url);
 
         const res = await fetch(url, { headers: defaultHeaders });
-        const data = await res.json();
+        let data: any = null;
+
+        try {
+          data = await res.json();
+        } catch {
+          // si el backend devolvió HTML por CORS o 500, evitamos romper la UI
+          data = null;
+        }
 
         if (!res.ok) {
-          throw new Error(data?.error || "No se pudieron cargar los turnos");
+          const msg = data?.error || `Error HTTP ${res.status}`;
+          throw new Error(msg);
         }
 
         // ordenar siempre por fechaHora (nuevos arriba, viejos abajo)

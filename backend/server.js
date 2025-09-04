@@ -3,36 +3,33 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-const verificarPinRouter = require("./routes/verificarPin"); 
+const verificarPinRouter = require("./routes/verificarPin");
 const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5176",
-      "https://consultorio-app-orcin.vercel.app",
-      "https://kinesiaconsultorio.onrender.com",
-    ];
+const allowed = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5176",
+  /^https:\/\/consultorio-app-.*\.vercel\.app$/, // previews
+  "https://consultorio-app-orcin.vercel.app", // producción
+];
 
-    if (
-      !origin ||
-      origin.includes("localhost") ||
-      allowedOrigins.includes(origin)
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("No permitido por CORS: " + origin));
-    }
-  },
-  credentials: true,
-};
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // Postman/mobile
+      const ok = allowed.some((rule) =>
+        rule instanceof RegExp ? rule.test(origin) : rule === origin
+      );
+      cb(ok ? null : new Error("CORS blocked: " + origin), ok);
+    },
+    credentials: true,
+  })
+);
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
 mongoose.set("bufferCommands", false);
