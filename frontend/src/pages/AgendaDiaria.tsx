@@ -138,9 +138,7 @@ const AgendaDiaria: React.FC = () => {
     };
     fetchTurnos();
   }, [profesional]);
-  // Primero filtro por búsqueda
-  const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
-  const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
+
   // clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
   // Normaliza: minúsculas, sin tildes, trim
   const normalize = (s: string) =>
@@ -192,16 +190,6 @@ const AgendaDiaria: React.FC = () => {
   const needle = useMemo(() => {
     return normalize(busqueda || "");
   }, [busqueda]);
-
-  const gruposHoy = useMemo(() => {
-    const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
-    return groupByPaciente(deHoy);
-  }, [turnos, dia]);
-
-  const gruposHistoricos = useMemo(() => {
-    const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
-    return groupByPaciente(historicos);
-  }, [turnos, dia]);
 
   const gruposTodos = useMemo(() => {
     return groupByPaciente(turnos);
