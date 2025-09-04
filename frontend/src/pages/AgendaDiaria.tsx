@@ -188,12 +188,31 @@ const AgendaDiaria: React.FC = () => {
   };
 
   // versiones agrupadas de hoy e históricos
-  const gruposHoy = groupByPaciente(deHoy);
-  const gruposHistoricos = groupByPaciente(historicos);
-  const gruposTodos = groupByPaciente(turnos);
-  const gruposFiltrados = gruposTodos.filter((g) =>
-    normalize(`${g.nombre} ${g.apellido}`).includes(normalize(busqueda))
-  );
+  // ✅ SEGURIDAD: calcular todo con needle declarado ANTES y en useMemo
+  const needle = useMemo(() => {
+    return normalize(busqueda || "");
+  }, [busqueda]);
+
+  const gruposHoy = useMemo(() => {
+    const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
+    return groupByPaciente(deHoy);
+  }, [turnos, dia]);
+
+  const gruposHistoricos = useMemo(() => {
+    const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
+    return groupByPaciente(historicos);
+  }, [turnos, dia]);
+
+  const gruposTodos = useMemo(() => {
+    return groupByPaciente(turnos);
+  }, [turnos]);
+
+  const gruposFiltrados = useMemo(() => {
+    if (!needle) return gruposTodos;
+    return gruposTodos.filter((g) =>
+      normalize(`${g.nombre} ${g.apellido}`).includes(needle)
+    );
+  }, [gruposTodos, needle]);
 
   // helper: del grupo, dame el del día o el más reciente
   const pickHoyOUltimo = (g: { items: Turno[] }) =>
