@@ -153,13 +153,6 @@ td button {
 }
 
 /* === Panel en dos columnas === */
-.panel-two {
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 20px;
-  align-items: start;
-  margin-top: 20px;
-}
 .col-left .card {
   position: relative;
 }
@@ -282,10 +275,6 @@ td button {
 .sticky {
   top: 0;
 }
-.panel-two .col-left .card,
-.panel-two .col-right .card {
-  margin-top: 12px;
-}
 
 /* Mensaje vacío con look de tarjeta como los items del historial */
 .col-right .empty {
@@ -296,5 +285,37 @@ td button {
   border-radius: 10px;
   color: #6b7280;
   display: block;
+}
+
+/* --- Mobile first: 1 sola columna --- */
+.panel-two{
+  display: grid;
+  grid-template-columns: 1fr;   /* apila: form arriba, historial abajo */
+  gap: 20px;
+  align-items: start;
+}
+.sticky{ position: static; }    /* que no “empuje” en móvil */
+
+/* --- Desktop (>=961px): 2 columnas --- */
+@media (min-width: 961px){
+  .panel-two{
+    grid-template-columns: minmax(340px, 420px) 1fr;  /* o 420px 1fr si preferís fijo */
+  }
+  .sticky{ position: sticky; top: 12px; }
+}
+
+/* --- Desktop: alinear títulos --- */
+@media (min-width: 961px){
+  .panel-two .col-left .card  { margin-top: 0; }     /* izquierda: sin extra */
+  .panel-two .col-right .card { margin-top: 12px; }  /* derecha: aire igual */
+  .sticky { position: sticky; top: 12px; }
+}
+
+/* --- Mobile: apilar y mismo margen --- */
+@media (max-width: 960px){
+  .panel-two { grid-template-columns: 1fr; }
+  .sticky { position: static; }
+  .panel-two .col-left .card,
+  .panel-two .col-right .card { margin-top: 12px; }
 }
 

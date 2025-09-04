@@ -91,4 +91,30 @@
   border-radius: 999px;
 }
 
+/* ====== Mobile tweaks (≤560px) ====== */
+@media (max-width: 560px) {
+  /* 1) Filtros en una sola columna: el datepicker deja de cortarse */
+  .grid-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  /* 2) Tabla más legible en móvil */
+  .tabla-agenda th,
+  .tabla-agenda td {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  /* Hora más angosta para liberar espacio */
+  .tabla-agenda th:nth-child(1),
+  .tabla-agenda td:nth-child(1) {
+    width: 80px;
+  }
+
+  /* Paciente con ancho mínimo: entra nombre + apellido */
+  .tabla-agenda th:nth-child(2),
+  .tabla-agenda td:nth-child(2) {
+    min-width: 180px;
+  }
+}
 
