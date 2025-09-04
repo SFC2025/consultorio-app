@@ -5,15 +5,10 @@ import { useContext } from "react";
 import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 
-const API_URL =
-  (import.meta.env.VITE_API_URL as string) ||
-  "https://kinesiaconsultorio.onrender.com/api";
-
-const API_KEY = (import.meta.env.VITE_API_KEY as string) || "";
-
-// headers comunes para PUT/POST/DELETE (y para subir imagen sin content-type)
-const defaultHeaders: HeadersInit = { "x-api-key": API_KEY };
-
+const API_URL = import.meta.env.VITE_API_URL as string;
+const defaultHeaders: HeadersInit = {
+  "x-api-key": import.meta.env.VITE_API_KEY,
+};
 type ConfirmState = {
   open: boolean;
   message: string;
@@ -44,14 +39,14 @@ type Turno = {
 const formatoHora = (iso: string) => {
   try {
     const d = new Date(iso);
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${hh}:${mm}`;
+    return d.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return "";
   }
 };
-
 // construir Date en horario local puro (sin UTC intermedio)
 const toISOWithTime = (yyyyMMdd: string, hhmm: string) => {
   const [y, m, d] = yyyyMMdd.split("-").map(Number);
@@ -87,20 +82,6 @@ const AgendaDiaria: React.FC = () => {
   const [combinarPorPaciente, setCombinarPorPaciente] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
   const [busqueda, setBusqueda] = useState("");
-  if (!API_URL) {
-    console.error(
-      "VITE_API_URL no está definido. Configurá la variable en Vercel."
-    );
-    return (
-      <div className="contenedor-general fondo-panel">
-        <h1>📅 Agenda Diaria</h1>
-        <div className="toast" style={{ background: "#fee", color: "#900" }}>
-          Falta configurar <code>VITE_API_URL</code> en el entorno de
-          producción.
-        </div>
-      </div>
-    );
-  }
 
   // 🔎 Buscador de paciente
 
@@ -116,78 +97,48 @@ const AgendaDiaria: React.FC = () => {
     )}-${String(d.getDate()).padStart(2, "0")}`;
     return actual === ymd;
   };
-  // --- fetch con headers y manejo de error visible (no deja la página en blanco)
-  async function fetchTurnos(params: { profesional: string; fecha?: string }) {
-    const query = new URLSearchParams();
-    query.set("profesional", params.profesional);
-    if (params.fecha) query.set("fecha", params.fecha);
-
-    const url = `${API_URL}/turnos?${query.toString()}`;
-
-    try {
-      const res = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-        },
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} - ${text}`);
-      }
-
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
-    } catch (err) {
-      console.error("Error cargando turnos:", err);
-      setMsg(
-        err instanceof Error ? err.message : "No se pudo cargar la agenda."
-      );
-      return [];
-    }
-  }
-
   // cargar turnos del día/profesional}
   useEffect(() => {
     if (selectedProfesional) setProfesional(selectedProfesional);
   }, [selectedProfesional]);
 
   useEffect(() => {
-    if (
-      !selectedProfesional &&
-      !profesional &&
-      profesionalesActivos.length > 0
-    ) {
-      setProfesional(profesionalesActivos[0]); // primer profesional activo
-    }
-  }, [selectedProfesional, profesional, profesionalesActivos]);
+    const fetchTurnos = async () => {
+      if (!profesional || !dia) {
+        setTurnos([]); //  si faltan filtros, vacio
+        return;
+      }
+      setCargando(true);
+      setMsg(""); //  limpio mensaje
+      try {
+        const url = `${API_URL}/turnos?profesional=${encodeURIComponent(
+          profesional
+        )}`;
 
-  useEffect(() => {
-    if (!profesional || !dia) {
-      setTurnos([]);
-      return;
-    }
+        const res = await fetch(url, { headers: defaultHeaders });
+        const data = await res.json();
 
-    setCargando(true);
-    setMsg("");
+        if (!res.ok) {
+          throw new Error(data?.error || "No se pudieron cargar los turnos");
+        }
 
-    fetchTurnos({ profesional, fecha: dia })
-      .then((data) => {
-        const ordenados = data.sort(
-          (a: any, b: any) =>
+        // ordenar siempre por fechaHora (nuevos arriba, viejos abajo)
+        const ordenados = (Array.isArray(data) ? data : []).sort(
+          (a, b) =>
             new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime()
         );
-        setTurnos(ordenados);
-      })
-      .catch(() => {
-        setTurnos([]);
-        // el setMsg ya se hace dentro de fetchTurnos
-      })
-      .finally(() => setCargando(false));
-  }, [profesional, dia]);
 
+        setTurnos(ordenados);
+      } catch (e) {
+        console.error(e);
+        setTurnos([]); //  evitar quedar con datos viejos
+        setMsg("No se pudieron cargar los turnos");
+      } finally {
+        setCargando(false);
+      }
+    };
+    fetchTurnos();
+  }, [profesional]);
   // Primero filtro por búsqueda
   const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
   const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
@@ -238,6 +189,8 @@ const AgendaDiaria: React.FC = () => {
   };
 
   // versiones agrupadas de hoy e históricos
+  const gruposHoy = groupByPaciente(deHoy);
+  const gruposHistoricos = groupByPaciente(historicos);
   const gruposTodos = groupByPaciente(turnos);
   const gruposFiltrados = gruposTodos.filter((g) =>
     normalize(`${g.nombre} ${g.apellido}`).includes(normalize(busqueda))
