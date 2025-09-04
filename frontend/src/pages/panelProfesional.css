@@ -107,9 +107,11 @@ td button {
   border-radius: 4px;
 }
 
-/* Fondo desde /public para que no dependa del bundler */
 .fondo-panel {
-  background: url("/portada.jpeg") center/cover no-repeat fixed;
+  background-image: url('../assets/portada.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   min-height: 100vh;
   padding: 2rem;
 }
