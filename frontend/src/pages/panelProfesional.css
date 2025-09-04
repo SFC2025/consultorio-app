@@ -107,11 +107,14 @@ td button {
   border-radius: 4px;
 }
 
-.fondo-panel {
-  background-image: url('../assets/portada.jpeg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+/* Fondo estable desde /public con mayor prioridad */
+.contenedor-general.fondo-panel {
+  background-image: url('/portada.jpeg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
   min-height: 100vh;
   padding: 2rem;
 }
+
