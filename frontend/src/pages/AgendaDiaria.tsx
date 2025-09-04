@@ -8,9 +8,12 @@ import Confirm from "../components/Confirm";
 const API_URL =
   (import.meta.env.VITE_API_URL as string) ||
   "https://kinesiaconsultorio.onrender.com/api";
-const defaultHeaders: HeadersInit = {
-  "x-api-key": import.meta.env.VITE_API_KEY,
-};
+
+const API_KEY = (import.meta.env.VITE_API_KEY as string) || "";
+
+// headers comunes para PUT/POST/DELETE (y para subir imagen sin content-type)
+const defaultHeaders: HeadersInit = { "x-api-key": API_KEY };
+
 type ConfirmState = {
   open: boolean;
   message: string;
@@ -113,6 +116,39 @@ const AgendaDiaria: React.FC = () => {
     )}-${String(d.getDate()).padStart(2, "0")}`;
     return actual === ymd;
   };
+  // --- fetch con headers y manejo de error visible (no deja la página en blanco)
+  async function fetchTurnos(params: { profesional: string; fecha?: string }) {
+    const query = new URLSearchParams();
+    query.set("profesional", params.profesional);
+    if (params.fecha) query.set("fecha", params.fecha);
+
+    const url = `${API_URL}/turnos?${query.toString()}`;
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY,
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status} - ${text}`);
+      }
+
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error("Error cargando turnos:", err);
+      setMsg(
+        err instanceof Error ? err.message : "No se pudo cargar la agenda."
+      );
+      return [];
+    }
+  }
+
   // cargar turnos del día/profesional}
   useEffect(() => {
     if (selectedProfesional) setProfesional(selectedProfesional);
@@ -129,51 +165,29 @@ const AgendaDiaria: React.FC = () => {
   }, [selectedProfesional, profesional, profesionalesActivos]);
 
   useEffect(() => {
-    const fetchTurnos = async () => {
-      if (!profesional || !dia) {
-        setTurnos([]); //  si faltan filtros, vacio
-        return;
-      }
-      setCargando(true);
-      setMsg(""); //  limpio mensaje
-      try {
-        const url = `${API_URL}/turnos?profesional=${encodeURIComponent(
-          profesional
-        )}`;
-        console.log("[Agenda] GET:", url);
+    if (!profesional || !dia) {
+      setTurnos([]);
+      return;
+    }
 
-        const res = await fetch(url, { headers: defaultHeaders });
-        let data: any = null;
+    setCargando(true);
+    setMsg("");
 
-        try {
-          data = await res.json();
-        } catch {
-          // si el backend devolvió HTML por CORS o 500, evitamos romper la UI
-          data = null;
-        }
-
-        if (!res.ok) {
-          const msg = data?.error || `Error HTTP ${res.status}`;
-          throw new Error(msg);
-        }
-
-        // ordenar siempre por fechaHora (nuevos arriba, viejos abajo)
-        const ordenados = (Array.isArray(data) ? data : []).sort(
-          (a, b) =>
+    fetchTurnos({ profesional, fecha: dia })
+      .then((data) => {
+        const ordenados = data.sort(
+          (a: any, b: any) =>
             new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime()
         );
-
         setTurnos(ordenados);
-      } catch (e) {
-        console.error(e);
-        setTurnos([]); //  evitar quedar con datos viejos
-        setMsg("No se pudieron cargar los turnos");
-      } finally {
-        setCargando(false);
-      }
-    };
-    fetchTurnos();
-  }, [profesional]);
+      })
+      .catch(() => {
+        setTurnos([]);
+        // el setMsg ya se hace dentro de fetchTurnos
+      })
+      .finally(() => setCargando(false));
+  }, [profesional, dia]);
+
   // Primero filtro por búsqueda
   const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
   const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));

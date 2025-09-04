@@ -5,7 +5,9 @@ import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 import "../components/confirm.css";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) ||
+  "https://kinesiaconsultorio.onrender.com/api";
 
 const defaultHeaders = {
   "Content-Type": "application/json",
