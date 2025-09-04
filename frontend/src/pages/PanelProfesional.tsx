@@ -5,14 +5,16 @@ import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 import "../components/confirm.css";
 
-const API_URL =
-  (import.meta.env.VITE_API_URL as string) ||
-  "https://kinesiaconsultorio.onrender.com/api";
+const API_URL = (import.meta.env.VITE_API_URL as string) || "https://kinesiaconsultorio.onrender.com/api";
+const API_KEY = String(import.meta.env.VITE_API_KEY ?? "");
+console.log("🌐 API_URL:", API_URL);
+console.log("🔑 API_KEY length:", API_KEY.length);
 
-const defaultHeaders = {
+const defaultHeaders: HeadersInit = {
   "Content-Type": "application/json",
-  "x-api-key": import.meta.env.VITE_API_KEY,
+  ...(API_KEY ? { "x-api-key": API_KEY } : {}),
 };
+
 type ConfirmState = {
   open: boolean;
   message: string;
