@@ -113,10 +113,29 @@ const PanelProfesional = () => {
   const [busqueda, setBusqueda] = useState("");
   const [horaTurno, setHoraTurno] = useState("");
 
-  // Filtro antes de renderizar
-  const clientesFiltrados = clientes.filter((c) =>
-    `${c.nombre} ${c.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // helpers de normalización (minúsculas + sin tildes)
+  const normalize = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .trim();
+
+  // declarar primero el needle y memorizarlo
+  const needle = React.useMemo(() => normalize(busqueda || ""), [busqueda]);
+
+  // lista filtrada memorizada (evita TDZ y renders extra)
+  const clientesFiltrados = React.useMemo(() => {
+    if (!Array.isArray(clientes)) return [];
+    if (!needle) return clientes;
+
+    return clientes.filter((c) => {
+      const texto = normalize(
+        `${c.nombre} ${c.apellido} ${c.obraSocial ?? ""}`
+      );
+      return texto.includes(needle);
+    });
+  }, [clientes, needle]);
 
   const [clienteActivo, setClienteActivo] = useState<Cliente | null>(null);
   const [mensaje, setMensaje] = useState("");
