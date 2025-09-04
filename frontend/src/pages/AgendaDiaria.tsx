@@ -6,10 +6,10 @@ import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 
 // --- DEBUG env en prod ---
-const API_URL = (import.meta.env.VITE_API_URL as string) || "https://kinesiaconsultorio.onrender.com/api";
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) ||
+  "https://kinesiaconsultorio.onrender.com/api";
 const API_KEY = String(import.meta.env.VITE_API_KEY ?? "");
-console.log("🌐 API_URL:", API_URL);
-console.log("🔑 API_KEY length:", API_KEY.length);
 
 const defaultHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
@@ -62,6 +62,21 @@ const mergeDatePreserveTime = (yyyyMMdd: string, isoOld: string) => {
   const [y, m, d] = yyyyMMdd.split("-").map(Number);
   const local = new Date(y, m - 1, d, old.getHours(), old.getMinutes(), 0, 0);
   return local.toISOString();
+};
+
+const capitalizarOS = (s?: string): string => {
+  const t = (s ?? "").trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+};
+
+const properCase = (s?: string): string => {
+  const t = (s ?? "").trim().toLowerCase();
+  if (!t) return "";
+  return t
+    .split(/\s+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+    .join(" ");
 };
 
 const AgendaDiaria: React.FC = () => {
@@ -234,15 +249,18 @@ const AgendaDiaria: React.FC = () => {
         <td>
           <input
             className="input-celda"
-            defaultValue={`${t.nombre} ${t.apellido}`}
+            defaultValue={`${properCase(t.nombre)} ${properCase(t.apellido)}`}
             onBlur={(e) => {
-              const val = e.target.value.trim();
-              if (!val) return;
-              const [nom, ...rest] = val.split(" ");
+              const raw = e.target.value.trim();
+              if (!raw) return;
+              const [nom, ...rest] = raw.split(/\s+/);
               const ape = rest.join(" ");
-              if (nom && ape) {
-                guardarCampo(t, "nombre" as any, nom);
-                guardarCampo(t, "apellido" as any, ape);
+              const nomPC = properCase(nom);
+              const apePC = properCase(ape);
+              if (nomPC && apePC) {
+                guardarCampo(t, "nombre" as any, nomPC);
+                guardarCampo(t, "apellido" as any, apePC);
+                e.target.value = `${nomPC} ${apePC}`; // reflejar en UI
               }
             }}
           />
@@ -298,11 +316,14 @@ const AgendaDiaria: React.FC = () => {
         <td>
           <input
             className="input-celda"
-            defaultValue={t.obraSocial || ""}
-            onBlur={(e) =>
-              e.target.value !== (t.obraSocial || "") &&
-              guardarCampo(t, "obraSocial" as any, e.target.value)
-            }
+            defaultValue={capitalizarOS(t.obraSocial)}
+            onBlur={(e) => {
+              const val = capitalizarOS(e.target.value);
+              if (val !== (t.obraSocial || "")) {
+                guardarCampo(t, "obraSocial" as any, val);
+              }
+              e.target.value = val; // refleja el formato en la UI
+            }}
             placeholder="Obra social"
           />
         </td>

@@ -47,6 +47,13 @@ interface Turno {
 // Capitaliza la primera letra de un texto
 const capitalizar = (texto: string): string =>
   texto.charAt(0).toUpperCase() + texto.slice(1);
+// Capitaliza solo la primera letra y baja el resto (incluye nulos/undefined)
+const capitalizarOS = (s?: string): string => {
+  const t = (s ?? "").trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+};
+
 const PanelProfesional = () => {
   const [pinIngresado, setPinIngresado] = useState("");
   const [pinValido, setPinValido] = useState(
@@ -206,7 +213,7 @@ const PanelProfesional = () => {
       clienteId: clienteActivo._id,
       nombre: clienteActivo.nombre,
       apellido: clienteActivo.apellido,
-      obraSocial: clienteActivo.obraSocial,
+      obraSocial: capitalizarOS(clienteActivo.obraSocial),
       diagnostico,
       profesional: selectedProfesional,
       fechaSesion,
@@ -399,7 +406,7 @@ const PanelProfesional = () => {
               <tr key={c._id}>
                 <td style={tdStyle}>{capitalizar(c.nombre)}</td>
                 <td style={tdStyle}>{capitalizar(c.apellido)}</td>
-                <td style={tdStyle}>{c.obraSocial}</td>
+                <td style={tdStyle}>{capitalizarOS(c.obraSocial)}</td>
                 <td style={tdStyle}>{c.numeroSesion}</td>
 
                 {/* Columna "Diagnóstico" */}
@@ -525,8 +532,10 @@ const PanelProfesional = () => {
             placeholder="Obra Social"
             value={editObraSocial}
             onChange={(e) => setEditObraSocial(e.target.value)}
+            onBlur={(e) => setEditObraSocial(capitalizarOS(e.target.value))}
             required
           />
+
           <div style={{ display: "flex", gap: "10px" }}>
             <button type="submit" className="btn">
               Guardar Cambios
@@ -566,10 +575,10 @@ const PanelProfesional = () => {
               </div>
 
               <div className="kv">
-                {" "}
-                <span className="k">Obra Social</span>{" "}
-                <span className="v">{capitalizar(clienteActivo.obraSocial)}</span>
-
+                <span className="k">Obra Social</span>
+                <span className="v">
+                  {capitalizarOS(clienteActivo.obraSocial)}
+                </span>
               </div>
 
               <div className="kv">
