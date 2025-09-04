@@ -83,14 +83,8 @@ const AgendaDiaria: React.FC = () => {
   const [combinarPorPaciente, setCombinarPorPaciente] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
   // 🔎 Buscador de paciente
-  const [busqueda, setBusqueda] = useState("");
+  const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
 
-  // Usa el mismo normalizador del agrupado
-  const matchBusqueda = (t: Turno) => {
-    const texto = `${normalize(t.nombre)} ${normalize(t.apellido)}`;
-    const q = normalize(busqueda);
-    return !q || texto.includes(q);
-  };
 
   // helper para mostrar "1 turno" o "2 turnos"
   const labelTurnos = (n: number): string => `${n} turno${n === 1 ? "" : "s"}`;
@@ -147,24 +141,24 @@ const AgendaDiaria: React.FC = () => {
     fetchTurnos();
   }, [profesional]);
   // Primero filtro por búsqueda
-  const turnosFiltrados = turnos.filter(matchBusqueda);
+  const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
+const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
+// clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
+// Normaliza: minúsculas, sin tildes, trim
+const normalize = (s: string) =>
+  (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .trim();
 
-  // Partimos en hoy / históricos usando los filtrados
-  const deHoy = turnosFiltrados.filter((t) => isSameLocalDay(t.fechaHora, dia));
-  const historicos = turnosFiltrados.filter(
-    (t) => !isSameLocalDay(t.fechaHora, dia)
-  );
+// SIEMPRE agrupamos por apellido|nombre normalizados (aunque exista clienteId)
+const keyPaciente = (t: Turno) =>
+  `${normalize(t.apellido)}|${normalize(t.nombre)}`;
 
-  // Normaliza: minúsculas, sin tildes, trim
-  const normalize = (s: string) =>
-    (s || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .trim();
+// Agrupa y ordena por paciente; dentro de cada paciente ordena sus turnos por fecha
+const groupByPaciente = (arr: Turno[]) => {
 
-  // SIEMPRE agrupo por apellido|nombre normalizados (aunque exista clienteId)
-  const keyPaciente = (t: Turno) =>
     `${normalize(t.apellido)}|${normalize(t.nombre)}`;
 
   // Agrupa y ordena por paciente; dentro de cada paciente ordena sus turnos por fecha
@@ -204,7 +198,7 @@ const AgendaDiaria: React.FC = () => {
   // versiones agrupadas de hoy e históricos
   const gruposHoy = groupByPaciente(deHoy);
   const gruposHistoricos = groupByPaciente(historicos);
-  const gruposTodos = groupByPaciente(turnosFiltrados);
+  const gruposTodos = groupByPaciente(turnos);
 
   // render fila de tabla
   const renderFila = (t: Turno) => {
@@ -554,15 +548,7 @@ const AgendaDiaria: React.FC = () => {
           Mostrar históricos
         </label>
       </div>
-      {/* Buscador de pacientes (igual que en Panel) */}
-      <input
-        type="text"
-        placeholder="Buscar paciente..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="form-control"
-      />
-
+      
       {/* NUEVO: Mostrar todos los turnos del paciente */}
       <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
