@@ -5,7 +5,9 @@ import { useContext } from "react";
 import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 
-const API_URL = (import.meta.env.VITE_API_URL as string) || "";
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) ||
+  "https://kinesiaconsultorio.onrender.com/api";
 const defaultHeaders: HeadersInit = {
   "x-api-key": import.meta.env.VITE_API_KEY,
 };
@@ -222,8 +224,6 @@ const AgendaDiaria: React.FC = () => {
   };
 
   // versiones agrupadas de hoy e históricos
-  const gruposHoy = groupByPaciente(deHoy);
-  const gruposHistoricos = groupByPaciente(historicos);
   const gruposTodos = groupByPaciente(turnos);
   const gruposFiltrados = gruposTodos.filter((g) =>
     normalize(`${g.nombre} ${g.apellido}`).includes(normalize(busqueda))
