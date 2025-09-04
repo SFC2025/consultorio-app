@@ -39,14 +39,14 @@ type Turno = {
 const formatoHora = (iso: string) => {
   try {
     const d = new Date(iso);
-    return d.toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm}`;
   } catch {
     return "";
   }
 };
+
 // construir Date en horario local puro (sin UTC intermedio)
 const toISOWithTime = (yyyyMMdd: string, hhmm: string) => {
   const [y, m, d] = yyyyMMdd.split("-").map(Number);
@@ -79,12 +79,11 @@ const AgendaDiaria: React.FC = () => {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [cargando, setCargando] = useState(false);
   const [msg, setMsg] = useState("");
-  const [mostrarHistoricos, setMostrarHistoricos] = useState(false);
   const [combinarPorPaciente, setCombinarPorPaciente] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
-  // 🔎 Buscador de paciente
-  const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
+  const [busqueda, setBusqueda] = useState("");
 
+  // 🔎 Buscador de paciente
 
   // helper para mostrar "1 turno" o "2 turnos"
   const labelTurnos = (n: number): string => `${n} turno${n === 1 ? "" : "s"}`;
@@ -142,55 +141,49 @@ const AgendaDiaria: React.FC = () => {
   }, [profesional]);
   // Primero filtro por búsqueda
   const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
-const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
-// clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
-// Normaliza: minúsculas, sin tildes, trim
-const normalize = (s: string) =>
-  (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .trim();
+  const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
+  // clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
+  // Normaliza: minúsculas, sin tildes, trim
+  const normalize = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .trim();
 
-// SIEMPRE agrupamos por apellido|nombre normalizados (aunque exista clienteId)
-const keyPaciente = (t: Turno) =>
-  `${normalize(t.apellido)}|${normalize(t.nombre)}`;
-
-// Agrupa y ordena por paciente; dentro de cada paciente ordena sus turnos por fecha
-const groupByPaciente = (arr: Turno[]) => {
-
+  // SIEMPRE agrupamos por apellido|nombre normalizados (aunque exista clienteId)
+  const keyPaciente = (t: Turno) =>
     `${normalize(t.apellido)}|${normalize(t.nombre)}`;
 
   // Agrupa y ordena por paciente; dentro de cada paciente ordena sus turnos por fecha
   const groupByPaciente = (arr: Turno[]) => {
+    // armo mapa por paciente (apellido|nombre normalizados)
     const map = new Map<
       string,
-      { nombre: string; apellido: string; items: Turno[] }
+      { nombre: string; apellido: string; items: Turno[]; latest?: number }
     >();
 
     for (const t of arr) {
       const k = keyPaciente(t);
-      if (!map.has(k))
+      if (!map.has(k)) {
         map.set(k, { nombre: t.nombre, apellido: t.apellido, items: [] });
+      }
       map.get(k)!.items.push(t);
     }
 
-    // dentro del paciente: DESC (nuevo → viejo)
-    const grupos = Array.from(map.values()).map((g) => ({
-      ...g,
-      items: g.items.sort(
+    // dentro de cada paciente: ordenar sus turnos DESC (nuevo → viejo)
+    const grupos = Array.from(map.values()).map((g) => {
+      g.items.sort(
         (a, b) =>
           new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime()
-        // opcional: si querés desempatar por sesión:
-        // || (b.numeroSesion ?? 0) - (a.numeroSesion ?? 0)
-      ),
-    }));
+      );
+      // guardo timestamp del MÁS RECIENTE del paciente
+      g.latest = new Date(g.items[0].fechaHora).getTime();
+      return g;
+    });
 
-    // orden de pacientes por Apellido, Nombre
-    grupos.sort(
-      (a, b) =>
-        a.apellido.localeCompare(b.apellido) || a.nombre.localeCompare(b.nombre)
-    );
+    // 👉 ordenar pacientes por su "latest" DESC (más nuevos arriba)
+    grupos.sort((a, b) => b.latest! - a.latest!);
 
     return grupos;
   };
@@ -199,6 +192,13 @@ const groupByPaciente = (arr: Turno[]) => {
   const gruposHoy = groupByPaciente(deHoy);
   const gruposHistoricos = groupByPaciente(historicos);
   const gruposTodos = groupByPaciente(turnos);
+  const gruposFiltrados = gruposTodos.filter((g) =>
+    normalize(`${g.nombre} ${g.apellido}`).includes(normalize(busqueda))
+  );
+
+  // helper: del grupo, dame el del día o el más reciente
+  const pickHoyOUltimo = (g: { items: Turno[] }) =>
+    g.items.find((t) => isSameLocalDay(t.fechaHora, dia)) ?? g.items[0];
 
   // render fila de tabla
   const renderFila = (t: Turno) => {
@@ -537,18 +537,16 @@ const groupByPaciente = (arr: Turno[]) => {
             onChange={(e) => setDia(e.target.value)}
           />
         </div>
-
-        {/* NUEVO TOGGLE */}
-        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type="checkbox"
-            checked={mostrarHistoricos}
-            onChange={(e) => setMostrarHistoricos(e.target.checked)}
-          />
-          Mostrar históricos
-        </label>
       </div>
-      
+
+      <input
+        type="text"
+        placeholder="Buscar paciente..."
+        className="form-control"
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
+
       {/* NUEVO: Mostrar todos los turnos del paciente */}
       <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
@@ -588,7 +586,7 @@ const groupByPaciente = (arr: Turno[]) => {
               </tr>
             ) : combinarPorPaciente ? (
               // ====== MODO COMBINADO: TODAS LAS SESIONES DEL PACIENTE JUNTAS ======
-              gruposTodos.map((g) => (
+              gruposFiltrados.map((g) => (
                 <React.Fragment key={`todos-${g.apellido}|${g.nombre}`}>
                   <tr>
                     <td colSpan={7} className="grupo-cabecera">
@@ -604,44 +602,18 @@ const groupByPaciente = (arr: Turno[]) => {
                 </React.Fragment>
               ))
             ) : (
-              // ====== MODO ACTUAL: HOY + (opcional) HISTÓRICOS ======
               <>
-                {/* HOY */}
-                {gruposHoy.length === 0 ? (
+                {gruposFiltrados.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ textAlign: "center" }}>
                       Sin turnos para este día/profesional
                     </td>
                   </tr>
                 ) : (
-                  gruposHoy.map((g) => (
-                    <React.Fragment key={`hoy-${g.apellido}|${g.nombre}`}>
-                      <tr>
-                        <td colSpan={7} className="grupo-cabecera">
-                          <div className="grupo-line">
-                            {g.apellido.toUpperCase()}, {g.nombre}
-                            <span className="grupo-badge">
-                              {labelTurnos(g.items.length)}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                      {g.items.map(renderFila)}
-                    </React.Fragment>
-                  ))
-                )}
-
-                {/* HISTÓRICOS (opcional) */}
-                {mostrarHistoricos && gruposHistoricos.length > 0 && (
-                  <>
-                    <tr>
-                      <td colSpan={7} className="grupo-separador">
-                        Histórico (anteriores)
-                      </td>
-                    </tr>
-
-                    {gruposHistoricos.map((g) => (
-                      <React.Fragment key={`hist-${g.apellido}|${g.nombre}`}>
+                  gruposFiltrados.map((g) => {
+                    const t = pickHoyOUltimo(g);
+                    return (
+                      <React.Fragment key={`hoy-${g.apellido}|${g.nombre}`}>
                         <tr>
                           <td colSpan={7} className="grupo-cabecera">
                             <div className="grupo-line">
@@ -652,10 +624,10 @@ const groupByPaciente = (arr: Turno[]) => {
                             </div>
                           </td>
                         </tr>
-                        {g.items.map(renderFila)}
+                        {t ? renderFila(t) : null}
                       </React.Fragment>
-                    ))}
-                  </>
+                    );
+                  })
                 )}
               </>
             )}

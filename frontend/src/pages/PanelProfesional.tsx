@@ -11,11 +11,17 @@ const defaultHeaders = {
   "Content-Type": "application/json",
   "x-api-key": import.meta.env.VITE_API_KEY,
 };
-type ConfirmState = { open: boolean; message: string; onConfirm: () => void };
+type ConfirmState = {
+  open: boolean;
+  message: string;
+  onConfirm: () => void;
+  confirmText?: string;
+};
 const initialConfirm: ConfirmState = {
   open: false,
   message: "",
   onConfirm: () => {},
+  confirmText: "Confirmar",
 };
 
 // Tipos para el cliente y turno
@@ -98,13 +104,12 @@ const PanelProfesional = () => {
   console.log("Profesionales del contexto:", profesionalesActivos);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [diagnostico, setDiagnostico] = useState("");
-  const [editandoSesion, setEditandoSesion] = useState<string | null>(null); // ID cliente en edición
-  const [nuevoNumeroSesion, setNuevoNumeroSesion] = useState<number>(0); // valor temporal
   const [fechaSesion, setFechaSesion] = useState(() => {
     const hoy = new Date().toISOString().slice(0, 10);
     return hoy;
   });
   const [busqueda, setBusqueda] = useState("");
+  const [horaTurno, setHoraTurno] = useState("");
 
   // Filtro antes de renderizar
   const clientesFiltrados = clientes.filter((c) =>
@@ -167,6 +172,12 @@ const PanelProfesional = () => {
   const enviarDiagnostico = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clienteActivo) return;
+    if (!horaTurno) {
+      alert("Elegí la hora del turno.");
+      return;
+    }
+
+    const fhISO = toISOWithTime(fechaSesion, horaTurno);
 
     console.log("📦 Enviando datos:", {
       clienteId: clienteActivo._id,
@@ -175,7 +186,9 @@ const PanelProfesional = () => {
       obraSocial: clienteActivo.obraSocial,
       diagnostico,
       profesional: selectedProfesional,
-      fecha: fechaSesion,
+      fechaSesion,
+      horaTurno,
+      fechaHoraISO: fhISO,
     });
 
     try {
@@ -190,9 +203,7 @@ const PanelProfesional = () => {
           diagnostico,
           profesional: selectedProfesional,
           numeroSesion: clienteActivo.numeroSesion + 1,
-          fechaHora: new Date(
-            `${fechaSesion}T${new Date().toTimeString().split(" ")[0]}`
-          ).toISOString(),
+          fechaHora: fhISO,
         }),
       });
 
@@ -219,28 +230,42 @@ const PanelProfesional = () => {
       console.error("Error al guardar diagnóstico:", error);
     }
   };
+  const toISOWithTime = (yyyyMMdd: string, hhmm: string) => {
+    const [y, m, d] = yyyyMMdd.split("-").map(Number);
+    const [hh, mm] = (hhmm || "00:00").split(":").map(Number);
+    const local = new Date(y, m - 1, d, hh, mm, 0, 0);
+    return local.toISOString();
+  };
 
   // Ubiqué afuera de enviarDiagnostico
-  const borrarDiagnostico = async (id: string) => {
-    if (
-      !window.confirm("¿Estás seguro de que deseas eliminar este diagnóstico?")
-    )
-      return;
+  // Abre el modal de confirmación "lindo"
+  const pedirConfirmBorrarDiagnostico = (t: Turno) => {
+    const fecha = t.fechaHora
+      ? new Date(t.fechaHora).toLocaleString("es-AR", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "este diagnóstico";
+    setConfirm({
+      open: true,
+      message: `¿Eliminar el diagnóstico de ${fecha}?`,
+      confirmText: "Eliminar diagnóstico",
+      onConfirm: () => borrarDiagnosticoReal(t),
+    });
+  };
 
+  // Ejecuta el borrado y refresca estados
+  const borrarDiagnosticoReal = async (t: Turno) => {
     try {
-      const res = await fetch(`${API_URL}/turnos/${id}`, {
+      const res = await fetch(`${API_URL}/turnos/${t._id}`, {
         method: "DELETE",
         headers: defaultHeaders,
       });
-
       if (!res.ok) throw new Error("Error al borrar diagnóstico");
 
       if (clienteActivo) {
-        const data = await res.json(); // <-- leer la respuesta con clienteActualizado
-        // Actualizar el historial
+        const data = await res.json(); // incluye clienteActualizado
         await cargarHistorial(clienteActivo._id);
-
-        // Actualizar el contador del cliente en memoria
         if (data.clienteActualizado) {
           setClientes((prev) =>
             prev.map((c) =>
@@ -250,11 +275,14 @@ const PanelProfesional = () => {
           setClienteActivo(data.clienteActualizado);
         }
       }
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
       alert("No se pudo borrar el diagnóstico");
+    } finally {
+      setConfirm((v) => ({ ...v, open: false })); // cerrar modal
     }
   };
+
   const borrarPaciente = async (c: Cliente) => {
     try {
       const res = await fetch(`${API_URL}/clientes/${c._id}`, {
@@ -342,83 +370,7 @@ const PanelProfesional = () => {
                 <td style={tdStyle}>{capitalizar(c.nombre)}</td>
                 <td style={tdStyle}>{capitalizar(c.apellido)}</td>
                 <td style={tdStyle}>{c.obraSocial}</td>
-                <td style={tdStyle}>
-                  {editandoSesion === c._id ? (
-                    <>
-                      <input
-                        type="number"
-                        value={nuevoNumeroSesion ?? 0}
-                        onChange={(e) =>
-                          setNuevoNumeroSesion(Number(e.target.value))
-                        }
-                        style={{ width: "60px", marginRight: "5px" }}
-                      />
-                      <button
-                        onClick={async () => {
-                          try {
-                            console.log("headers enviados:", defaultHeaders);
-                            const res = await fetch(
-                              `${API_URL}/clientes/${c._id}/sesion`,
-                              {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  numeroSesion: nuevoNumeroSesion,
-                                }),
-                              }
-                            );
-
-                            const data = await res.json();
-                            if (res.ok) {
-                              setClientes((prev) =>
-                                prev.map((cl) =>
-                                  cl._id === c._id
-                                    ? { ...cl, numeroSesion: nuevoNumeroSesion }
-                                    : cl
-                                )
-                              );
-                              setMensaje("✅ Sesión actualizada con éxito");
-                              setTimeout(() => setMensaje(""), 3000);
-                              setEditandoSesion(null);
-                            } else {
-                              alert(`Error: ${data.error}`);
-                            }
-                          } catch (error) {
-                            console.error("Error al editar sesión:", error);
-                          }
-                        }}
-                        className="btn"
-                      >
-                        Guardar
-                      </button>
-                      <button
-                        onClick={() => setEditandoSesion(null)}
-                        className="btn-outline"
-                      >
-                        Cancelar
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {c.numeroSesion}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditandoSesion(c._id);
-                          setNuevoNumeroSesion(c.numeroSesion ?? 0);
-                        }}
-                        className="btn-outline"
-                        style={{
-                          border: "1px solid #ccc",
-                          borderRadius: "6px",
-                          padding: "4px",
-                        }}
-                      >
-                        ✏️
-                      </button>
-                    </>
-                  )}
-                </td>
+                <td style={tdStyle}>{c.numeroSesion}</td>
 
                 {/* Columna "Diagnóstico" */}
                 <td style={tdStyle}>
@@ -426,6 +378,7 @@ const PanelProfesional = () => {
                     onClick={() => {
                       setClienteActivo(c);
                       setDiagnostico("");
+                      setHoraTurno("");
                       cargarHistorial(c._id);
                     }}
                     className="btn"
@@ -599,6 +552,16 @@ const PanelProfesional = () => {
               required
               className="form-control"
             />
+            <label className="help" style={{ marginTop: 8 }}>
+              Turno (hora)
+            </label>
+            <input
+              type="time"
+              value={horaTurno}
+              onChange={(e) => setHoraTurno(e.target.value)}
+              required
+              className="form-control"
+            />
 
             <textarea
               required
@@ -608,9 +571,23 @@ const PanelProfesional = () => {
               className="form-control"
             />
 
-            <button type="submit" className="btn">
-              Guardar Diagnóstico
-            </button>
+            <div className="acciones-form">
+              <button type="submit" className="btn">
+                Guardar Diagnóstico
+              </button>
+              <button
+                type="button"
+                className="btn btn-rojo"
+                onClick={() => {
+                  setDiagnostico("");
+                  setHistorial([]);
+                  setHoraTurno("");
+                  setClienteActivo(null);
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
           </form>
           {/* Mostrar mensaje si no hay diagnósticos aún */}
           {clienteActivo && historial.length === 0 && (
@@ -745,7 +722,7 @@ const PanelProfesional = () => {
                             ✏️ Editar
                           </button>
                           <button
-                            onClick={() => borrarDiagnostico(t._id)}
+                            onClick={() => pedirConfirmBorrarDiagnostico(t)}
                             className="btn-rojo"
                           >
                             🗑 Borrar
@@ -764,7 +741,7 @@ const PanelProfesional = () => {
       <Confirm
         open={confirm.open}
         message={confirm.message}
-        confirmText="Eliminar paciente"
+        confirmText={confirm.confirmText || "Confirmar"}
         onConfirm={confirm.onConfirm}
         onClose={() => setConfirm((v) => ({ ...v, open: false }))}
       />
