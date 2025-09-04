@@ -168,7 +168,8 @@ const PanelProfesional = () => {
         const res = await fetch(
           `${API_URL}/clientes?profesional=${encodeURIComponent(
             selectedProfesional
-          )}`
+          )}`,
+          { headers: defaultHeaders }
         );
         const data = await res.json();
         setClientes(data);
