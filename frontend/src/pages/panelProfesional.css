@@ -87,14 +87,12 @@ td button {
   width: 100%;
 }
 
-.contenedor-general {
-  max-width: 100%;
-  overflow-x: auto;
-  padding: 1rem;
-  background-color: #f9fafb;
-  min-height: 100vh;
-  font-family: "Inter", sans-serif;
-  line-height: 1.5;
+.contenedor-general { 
+  padding: 2rem; 
+  min-height: 100vh; 
+  box-sizing: border-box; 
+  font-family: "Inter", sans-serif; 
+  line-height: 1.5; 
 }
 
 .btn-rojo {
