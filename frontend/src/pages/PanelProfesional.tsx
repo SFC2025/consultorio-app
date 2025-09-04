@@ -5,10 +5,10 @@ import { ProfesionalContexto } from "../context/ProfesionalContexto";
 import Confirm from "../components/Confirm";
 import "../components/confirm.css";
 
-const API_URL = (import.meta.env.VITE_API_URL as string) || "https://kinesiaconsultorio.onrender.com/api";
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) ||
+  "https://kinesiaconsultorio.onrender.com/api";
 const API_KEY = String(import.meta.env.VITE_API_KEY ?? "");
-console.log("🌐 API_URL:", API_URL);
-console.log("🔑 API_KEY length:", API_KEY.length);
 
 const defaultHeaders: HeadersInit = {
   "Content-Type": "application/json",
@@ -342,10 +342,12 @@ const PanelProfesional = () => {
     <div className="contenedor-general fondo-panel">
       <h1>🩺 Panel de Profesionales</h1>
       {mensaje && <p style={{ color: "green" }}>{mensaje}</p>}
-      {/* 🔽 SELECT de profesional */}
-      <div style={{ marginBottom: "1rem" }}>
-        <label>
-          Seleccione su nombre profesional:
+      {/* Toolbar (selector + buscador) */}
+      <div className="toolbar">
+        <div className="toolbar-item">
+          <label className="help" style={{ marginBottom: 6 }}>
+            Profesional
+          </label>
           <select
             value={selectedProfesional}
             onChange={(e) => {
@@ -363,16 +365,21 @@ const PanelProfesional = () => {
               </option>
             ))}
           </select>
-        </label>
+        </div>
+
+        <div className="toolbar-item">
+          <label className="help" style={{ marginBottom: 6 }}>
+            Buscar paciente
+          </label>
+          <input
+            type="text"
+            placeholder="Nombre, apellido u obra social…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="form-control"
+          />
+        </div>
       </div>
-      {/* Buscador de pacientes */}
-      <input
-        type="text"
-        placeholder="Buscar paciente..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="form-control"
-      />
 
       <div className="tabla-responsive">
         <table className="tabla-pacientes">
@@ -539,105 +546,113 @@ const PanelProfesional = () => {
       )}
 
       {clienteActivo && (
-        <>
-          <form onSubmit={enviarDiagnostico} className="form-diagnostico">
-            <h3>Registrar Diagnóstico</h3>
-            <p>
-              <strong>Nombre:</strong> {clienteActivo.nombre}
-            </p>
-            <p>
-              <strong>Apellido:</strong> {clienteActivo.apellido}
-            </p>
-            <p>
-              <strong>Obra Social:</strong> {clienteActivo.obraSocial}
-            </p>
-            <p>
-              <strong>Sesión Nº:</strong> {clienteActivo.numeroSesion + 1}
-            </p>
-            <select
-              value={selectedProfesional}
-              onChange={(e) => setSelectedProfesional(e.target.value)}
-              required
-              className="form-control"
+        <div className="panel-two">
+          {/* Columna izquierda: formulario (sticky) */}
+          <div className="col-left">
+            <form
+              onSubmit={enviarDiagnostico}
+              className="card form-diagnostico sticky"
             >
-              <option value="">Seleccione profesional</option>
-              {profesionalesActivos.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              <h3>Registrar Diagnóstico</h3>
 
-            <input
-              type="date"
-              value={fechaSesion}
-              onChange={(e) => setFechaSesion(e.target.value)}
-              required
-              className="form-control"
-            />
-            <label className="help" style={{ marginTop: 8 }}>
-              Turno (hora)
-            </label>
-            <input
-              type="time"
-              value={horaTurno}
-              onChange={(e) => setHoraTurno(e.target.value)}
-              required
-              className="form-control"
-            />
+              <div className="kv">
+                <span className="k">Nombre</span>
+                <span className="v">{capitalizar(clienteActivo.nombre)}</span>
+              </div>
 
-            <textarea
-              required
-              placeholder="Diagnóstico"
-              value={diagnostico}
-              onChange={(e) => setDiagnostico(e.target.value)}
-              className="form-control"
-            />
+              <div className="kv">
+                <span className="k">Apellido</span>
+                <span className="v">{capitalizar(clienteActivo.apellido)}</span>
+              </div>
 
-            <div className="acciones-form">
-              <button type="submit" className="btn">
-                Guardar Diagnóstico
-              </button>
-              <button
-                type="button"
-                className="btn btn-rojo"
-                onClick={() => {
-                  setDiagnostico("");
-                  setHistorial([]);
-                  setHoraTurno("");
-                  setClienteActivo(null);
-                }}
+              <div className="kv">
+                {" "}
+                <span className="k">Obra Social</span>{" "}
+                <span className="v">{capitalizar(clienteActivo.obraSocial)}</span>
+
+              </div>
+
+              <div className="kv">
+                <span className="k">Sesión Nº</span>
+                <span className="v">{clienteActivo.numeroSesion + 1}</span>
+              </div>
+
+              <select
+                value={selectedProfesional}
+                onChange={(e) => setSelectedProfesional(e.target.value)}
+                required
+                className="form-control"
               >
-                Cancelar
-              </button>
-            </div>
-          </form>
-          {/* Mostrar mensaje si no hay diagnósticos aún */}
-          {clienteActivo && historial.length === 0 && (
-            <p style={{ marginTop: "1rem", color: "white" }}>
-              Este paciente aún no tiene diagnósticos registrados.
-            </p>
-          )}
-          {historial.length > 0 && (
-            <div
-              style={{
-                background: "#fff",
-                marginTop: "20px",
-                padding: "20px",
-                borderRadius: "10px",
-                maxWidth: "600px",
-              }}
-            >
+                <option value="">Seleccione profesional</option>
+                {profesionalesActivos.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="date"
+                value={fechaSesion}
+                onChange={(e) => setFechaSesion(e.target.value)}
+                required
+                className="form-control"
+              />
+
+              <label className="help" style={{ marginTop: 8 }}>
+                Turno (hora)
+              </label>
+              <input
+                type="time"
+                value={horaTurno}
+                onChange={(e) => setHoraTurno(e.target.value)}
+                required
+                className="form-control"
+              />
+
+              <textarea
+                required
+                placeholder="Diagnóstico"
+                value={diagnostico}
+                onChange={(e) => setDiagnostico(e.target.value)}
+                className="form-control"
+                rows={4}
+              />
+
+              <div className="acciones-form">
+                <button type="submit" className="btn">
+                  Guardar Diagnóstico
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-rojo"
+                  onClick={() => {
+                    setDiagnostico("");
+                    setHistorial([]);
+                    setHoraTurno("");
+                    setClienteActivo(null);
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Columna derecha: historial (timeline) */}
+          <div className="col-right">
+            <div className="card">
               <h3>🗂 Historial de Diagnósticos</h3>
-              <ul style={{ paddingLeft: 0 }}>
-                {historial.map((t, idx) => (
-                  <li
-                    key={idx}
-                    style={{ marginBottom: "12px", listStyle: "none" }}
-                  >
-                    <p>
-                      <strong>📅 Fecha:</strong>{" "}
-                      {t.fechaHora &&
+
+              {historial.length === 0 ? (
+                <p className="empty">
+                  Este paciente aún no tiene diagnósticos registrados.
+                </p>
+              ) : (
+                <ul className="timeline">
+                  {historial.map((t) => {
+                    const fechaStr =
+                      t.fechaHora &&
                       !isNaN(new Date(t.fechaHora as string).getTime())
                         ? new Date(t.fechaHora as string).toLocaleString(
                             "es-AR",
@@ -646,121 +661,126 @@ const PanelProfesional = () => {
                               timeStyle: "short",
                             }
                           )
-                        : "Sin fecha"}
-                    </p>
+                        : "Sin fecha";
 
-                    <p>
-                      <strong>👤 Paciente:</strong> {clienteActivo?.nombre}{" "}
-                      {clienteActivo?.apellido}
-                    </p>
-
-                    <p>
-                      <strong>📘 Sesión Nº:</strong> {t.numeroSesion}
-                    </p>
-
-                    <p>
-                      <strong>👩‍⚕️ Profesional:</strong> {t.profesional}
-                    </p>
-
-                    <p>
-                      <strong>📋 Diagnóstico:</strong>{" "}
-                      {modoEditarDiagnostico && turnoEditando?._id === t._id ? (
-                        <>
-                          <textarea
-                            value={diagnosticoEditado}
-                            onChange={(e) =>
-                              setDiagnosticoEditado(e.target.value)
-                            }
-                            style={{
-                              width: "100%",
-                              minHeight: "80px",
-                              marginTop: "10px",
-                            }}
-                          />
-                          <div style={{ marginTop: "8px" }}>
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const res = await fetch(
-                                    `${API_URL}/turnos/${t._id}`,
-                                    {
-                                      method: "PUT",
-                                      headers: defaultHeaders,
-                                      body: JSON.stringify({
-                                        diagnostico: diagnosticoEditado,
-                                      }),
-                                    }
-                                  );
-
-                                  const data = await res.json();
-                                  if (res.ok) {
-                                    setMensaje("✅ Diagnóstico actualizado");
-                                    setHistorial((prev) =>
-                                      prev.map((turno) =>
-                                        turno._id === t._id
-                                          ? {
-                                              ...turno,
-                                              diagnostico: diagnosticoEditado,
-                                            }
-                                          : turno
-                                      )
-                                    );
-                                    setModoEditarDiagnostico(false);
-                                    setTurnoEditando(null);
-                                  } else {
-                                    alert(`❌ Error: ${data.error}`);
-                                  }
-                                } catch (error) {
-                                  console.error(
-                                    "Error al actualizar diagnóstico:",
-                                    error
-                                  );
-                                }
-                              }}
-                            >
-                              💾 Guardar
-                            </button>
-                            <button
-                              onClick={() => {
-                                setModoEditarDiagnostico(false);
-                                setTurnoEditando(null);
-                              }}
-                              style={{ marginLeft: "10px" }}
-                            >
-                              Cancelar
-                            </button>
+                    return (
+                      <li key={t._id} className="timeline-item">
+                        <div className="t-inline">
+                          <div className="t-meta">
+                            <div className="t-fecha">📅 {fechaStr}</div>
+                            <div className="t-sesion">
+                              📘 Sesión Nº: {t.numeroSesion}
+                            </div>
+                            <div className="t-prof">👩‍⚕️ {t.profesional}</div>
                           </div>
-                        </>
-                      ) : (
-                        <>
-                          {t.diagnostico}
-                          <button
-                            onClick={() => {
-                              setModoEditarDiagnostico(true);
-                              setTurnoEditando(t);
-                              setDiagnosticoEditado(t.diagnostico);
-                            }}
-                            style={{ marginLeft: "10px" }}
-                          >
-                            ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() => pedirConfirmBorrarDiagnostico(t)}
-                            className="btn-rojo"
-                          >
-                            🗑 Borrar
-                          </button>
-                        </>
-                      )}
-                    </p>
-                    <hr style={{ marginTop: "10px" }} />
-                  </li>
-                ))}
-              </ul>
+
+                          <div className="t-acciones">
+                            {modoEditarDiagnostico &&
+                            turnoEditando?._id === t._id ? (
+                              <>
+                                <textarea
+                                  value={diagnosticoEditado}
+                                  onChange={(e) =>
+                                    setDiagnosticoEditado(e.target.value)
+                                  }
+                                  className="form-control"
+                                  rows={3}
+                                />
+                                <div className="t-acciones-row">
+                                  <button
+                                    className="btn"
+                                    onClick={async () => {
+                                      try {
+                                        const res = await fetch(
+                                          `${API_URL}/turnos/${t._id}`,
+                                          {
+                                            method: "PUT",
+                                            headers: defaultHeaders,
+                                            body: JSON.stringify({
+                                              diagnostico: diagnosticoEditado,
+                                            }),
+                                          }
+                                        );
+                                        const data = await res.json();
+                                        if (res.ok) {
+                                          setMensaje(
+                                            "✅ Diagnóstico actualizado"
+                                          );
+                                          setHistorial((prev) =>
+                                            prev.map((turno) =>
+                                              turno._id === t._id
+                                                ? {
+                                                    ...turno,
+                                                    diagnostico:
+                                                      diagnosticoEditado,
+                                                  }
+                                                : turno
+                                            )
+                                          );
+                                          setModoEditarDiagnostico(false);
+                                          setTurnoEditando(null);
+                                        } else {
+                                          alert(`❌ Error: ${data.error}`);
+                                        }
+                                      } catch (error) {
+                                        console.error(
+                                          "Error al actualizar diagnóstico:",
+                                          error
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    💾 Guardar
+                                  </button>
+                                  <button
+                                    className="btn-outline"
+                                    onClick={() => {
+                                      setModoEditarDiagnostico(false);
+                                      setTurnoEditando(null);
+                                    }}
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="t-acciones-row">
+                                <button
+                                  className="btn-outline"
+                                  onClick={() => {
+                                    setModoEditarDiagnostico(true);
+                                    setTurnoEditando(t);
+                                    setDiagnosticoEditado(t.diagnostico);
+                                  }}
+                                >
+                                  ✏️ Editar
+                                </button>
+                                <button
+                                  className="btn-rojo"
+                                  onClick={() =>
+                                    pedirConfirmBorrarDiagnostico(t)
+                                  }
+                                >
+                                  🗑 Borrar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {!(
+                          modoEditarDiagnostico && turnoEditando?._id === t._id
+                        ) && <p className="t-dx">{t.diagnostico}</p>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-          )}
-        </>
+          </div>
+        </div>
       )}
+
       <Confirm
         open={confirm.open}
         message={confirm.message}
