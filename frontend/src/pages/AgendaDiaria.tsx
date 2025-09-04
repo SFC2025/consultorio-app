@@ -140,11 +140,17 @@ const AgendaDiaria: React.FC = () => {
   const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
   const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
   // clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
+  // Normaliza: minúsculas, sin tildes, trim
+  const normalize = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .trim();
+
+  // SIEMPRE agrupamos por apellido|nombre normalizados (aunque exista clienteId)
   const keyPaciente = (t: Turno) =>
-    t.clienteId ||
-    `${t.apellido}`.trim().toLowerCase() +
-      "|" +
-      `${t.nombre}`.trim().toLowerCase();
+    `${normalize(t.apellido)}|${normalize(t.nombre)}`;
 
   // Agrupa y ordena por paciente; dentro de cada paciente ordena sus turnos por fecha
   const groupByPaciente = (arr: Turno[]) => {
@@ -549,7 +555,7 @@ const AgendaDiaria: React.FC = () => {
             <tr>
               <th>Hora</th>
               <th>Paciente</th>
-              <th>Turno</th> 
+              <th>Turno</th>
               <th>Sesión</th>
               <th>Tratamiento</th>
               <th>Obra Social</th>

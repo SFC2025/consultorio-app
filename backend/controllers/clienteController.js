@@ -108,7 +108,17 @@ const eliminarCliente = async (req, res) => {
       return res.status(404).json({ error: "Cliente no encontrado" });
     }
 
-    await Turno.deleteMany({ clienteId: id });
+    // Eliminar cliente + TODOS sus turnos (con y sin clienteId)
+    await Turno.deleteMany({
+      $or: [
+        { clienteId: id },
+        {
+          nombre: { $regex: `^${cli.nombre}$`, $options: "i" },
+          apellido: { $regex: `^${cli.apellido}$`, $options: "i" },
+          profesional: { $regex: `^${cli.profesional}$`, $options: "i" },
+        },
+      ],
+    });
 
     await Cliente.deleteOne({ _id: id });
 
