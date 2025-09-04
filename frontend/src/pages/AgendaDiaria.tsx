@@ -82,6 +82,15 @@ const AgendaDiaria: React.FC = () => {
   const [mostrarHistoricos, setMostrarHistoricos] = useState(false);
   const [combinarPorPaciente, setCombinarPorPaciente] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState>(initialConfirm);
+  // 🔎 Buscador de paciente
+  const [busqueda, setBusqueda] = useState("");
+
+  // Usa el mismo normalizador del agrupado
+  const matchBusqueda = (t: Turno) => {
+    const texto = `${normalize(t.nombre)} ${normalize(t.apellido)}`;
+    const q = normalize(busqueda);
+    return !q || texto.includes(q);
+  };
 
   // helper para mostrar "1 turno" o "2 turnos"
   const labelTurnos = (n: number): string => `${n} turno${n === 1 ? "" : "s"}`;
@@ -137,9 +146,15 @@ const AgendaDiaria: React.FC = () => {
     };
     fetchTurnos();
   }, [profesional]);
-  const deHoy = turnos.filter((t) => isSameLocalDay(t.fechaHora, dia));
-  const historicos = turnos.filter((t) => !isSameLocalDay(t.fechaHora, dia));
-  // clave de agrupación: usa clienteId si existe, si no apellido+nombre normalizados
+  // Primero filtro por búsqueda
+  const turnosFiltrados = turnos.filter(matchBusqueda);
+
+  // Partimos en hoy / históricos usando los filtrados
+  const deHoy = turnosFiltrados.filter((t) => isSameLocalDay(t.fechaHora, dia));
+  const historicos = turnosFiltrados.filter(
+    (t) => !isSameLocalDay(t.fechaHora, dia)
+  );
+
   // Normaliza: minúsculas, sin tildes, trim
   const normalize = (s: string) =>
     (s || "")
@@ -148,7 +163,7 @@ const AgendaDiaria: React.FC = () => {
       .replace(/\p{Diacritic}/gu, "")
       .trim();
 
-  // SIEMPRE agrupamos por apellido|nombre normalizados (aunque exista clienteId)
+  // SIEMPRE agrupo por apellido|nombre normalizados (aunque exista clienteId)
   const keyPaciente = (t: Turno) =>
     `${normalize(t.apellido)}|${normalize(t.nombre)}`;
 
@@ -189,7 +204,7 @@ const AgendaDiaria: React.FC = () => {
   // versiones agrupadas de hoy e históricos
   const gruposHoy = groupByPaciente(deHoy);
   const gruposHistoricos = groupByPaciente(historicos);
-  const gruposTodos = groupByPaciente(turnos);
+  const gruposTodos = groupByPaciente(turnosFiltrados);
 
   // render fila de tabla
   const renderFila = (t: Turno) => {
@@ -539,6 +554,15 @@ const AgendaDiaria: React.FC = () => {
           Mostrar históricos
         </label>
       </div>
+      {/* Buscador de pacientes (igual que en Panel) */}
+      <input
+        type="text"
+        placeholder="Buscar paciente..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="form-control"
+      />
+
       {/* NUEVO: Mostrar todos los turnos del paciente */}
       <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
