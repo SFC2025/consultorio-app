@@ -1,15 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-// ⬇️ Quitamos el middleware antiguo:
+// Quitamos el middleware antiguo:
 // const upload = require("../middleware/upload");
 
-// ⬇️ Usamos Multer en memoria + Cloudinary directo
+// Uso Multer en memoria + Cloudinary directo
 const multer = require("multer");
+
 const uploadMem = multer({
-  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB
-  limits: { fileSize: 10 * 1024 * 1024 },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
+
 const cloudinary = require("../utils/cloudinary");
 const Turno = require("../models/turnoModel");
 
@@ -21,7 +23,6 @@ const {
   eliminarTurno,
   actualizarDiagnostico,
   historialPorClienteYProfesional,
-  // subirImagenTurno,   // ⬅️ ya no usamos este para el POST
   borrarImagenTurno,
 } = require("../controllers/turnoController");
 
@@ -46,13 +47,22 @@ router.get("/historial/:clienteId", historialPorClienteYProfesional);
 // Obtener un turno por ID
 router.get("/:id", obtenerTurno);
 
-/**
- * Subir imagen (JPG/PNG) a Cloudinary desde buffer y guardar URL
- * POST /api/turnos/:id/imagen
- * FormData campo: "imagen"
- */
+// Subir imagen usando Multer en memoria y Cloudinary
 router.post("/:id/imagen", uploadMem.single("imagen"), async (req, res) => {
   try {
+    // debug mínimo (dejar por ahora)
+    console.log("🔎 headers:", req.headers["content-type"]);
+    console.log(
+      "🔎 file?",
+      !!req.file,
+      req.file && {
+        fieldname: req.file.fieldname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      }
+    );
+    console.log("🔎 params.id:", req.params.id);
+
     if (!req.file) return res.status(400).json({ error: "Falta imagen" });
     if (!/^image\/(jpe?g|png)$/i.test(req.file.mimetype)) {
       return res.status(400).json({ error: "Formato no permitido (JPG/PNG)" });
@@ -76,11 +86,15 @@ router.post("/:id/imagen", uploadMem.single("imagen"), async (req, res) => {
     return res.json({ ok: true, turno: { imagenUrl: turno.imagenUrl } });
   } catch (e) {
     console.error("Error al subir imagen:", e);
-    return res.status(500).json({ error: "Error al subir imagen" });
+    return res
+      .status(500)
+      .json({
+        error: e?.message || e?.error?.message || "Error al subir imagen",
+      });
   }
 });
 
-// Borrar imagen (puedes mantener tu controlador actual)
+// Borrar imagen asociada al turno
 router.delete("/:id/imagen", borrarImagenTurno);
 
 module.exports = router;
