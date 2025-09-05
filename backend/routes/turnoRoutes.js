@@ -7,8 +7,8 @@ const router = express.Router();
 // ⬇️ Usamos Multer en memoria + Cloudinary directo
 const multer = require("multer");
 const uploadMem = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 4 * 1024 * 1024 }, // 4MB
+  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 const cloudinary = require("../utils/cloudinary");
 const Turno = require("../models/turnoModel");
@@ -58,16 +58,14 @@ router.post("/:id/imagen", uploadMem.single("imagen"), async (req, res) => {
       return res.status(400).json({ error: "Formato no permitido (JPG/PNG)" });
     }
 
-    // subir a Cloudinary desde buffer
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "turnos" },
+        { folder: "kinesia/turnos", resource_type: "image" },
         (err, r) => (err ? reject(err) : resolve(r))
       );
       stream.end(req.file.buffer);
     });
 
-    // guardar url en DB
     const turno = await Turno.findByIdAndUpdate(
       req.params.id,
       { imagenUrl: result.secure_url },
@@ -75,10 +73,10 @@ router.post("/:id/imagen", uploadMem.single("imagen"), async (req, res) => {
     );
     if (!turno) return res.status(404).json({ error: "Turno no encontrado" });
 
-    res.json({ ok: true, turno: { imagenUrl: turno.imagenUrl } });
+    return res.json({ ok: true, turno: { imagenUrl: turno.imagenUrl } });
   } catch (e) {
     console.error("Error al subir imagen:", e);
-    res.status(500).json({ error: "Error al subir imagen" });
+    return res.status(500).json({ error: "Error al subir imagen" });
   }
 });
 

@@ -419,30 +419,53 @@ const AgendaDiaria: React.FC = () => {
     }
   };
 
-  // Imagen: subir
+  // Imagen: subir (robusto y con mejor error)
   const subirImagen = async (t: Turno, file: File | null) => {
     if (!file) return;
+
+    // Validaciones básicas
+    if (!/^image\/(jpe?g|png)$/.test(file.type)) {
+      setMsg("❌ Formato no permitido (use JPG/PNG)");
+      setTimeout(() => setMsg(""), 2500);
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setMsg("❌ Imagen demasiado grande (>4MB)");
+      setTimeout(() => setMsg(""), 2500);
+      return;
+    }
+
     const fd = new FormData();
-    fd.append("imagen", file);
+    fd.append("imagen", file, file.name); // incluye filename
+
     try {
       const res = await fetch(`${API_URL}/turnos/${t._id}/imagen`, {
         method: "POST",
-        headers: defaultHeaders, // NO ponger content-type
+        headers: defaultHeaders, // NO setear Content-Type aquí
         body: fd,
       });
-      const js = await res.json();
-      if (!res.ok) throw new Error(js?.error || "Error al subir imagen");
-      // refrescamos la URL en memoria
+
+      const text = await res.text();
+      let js: any;
+      try {
+        js = JSON.parse(text);
+      } catch {
+        js = { error: text };
+      }
+
+      if (!res.ok) {
+        throw new Error(js?.error || "Error al subir imagen");
+      }
+
+      const url = js.turno?.imagenUrl || js.imagenUrl || "";
       setTurnos((prev) =>
-        prev.map((x) =>
-          x._id === t._id ? { ...x, imagenUrl: js.turno?.imagenUrl } : x
-        )
+        prev.map((x) => (x._id === t._id ? { ...x, imagenUrl: url } : x))
       );
       setMsg("✅ Imagen subida");
-      setTimeout(() => setMsg(""), 1500);
-    } catch (e) {
-      console.error(e);
-      setMsg("❌ No se pudo subir la imagen");
+    } catch (e: any) {
+      console.error("Upload error:", e);
+      setMsg(`❌ No se pudo subir la imagen: ${e.message || e}`);
+    } finally {
       setTimeout(() => setMsg(""), 2500);
     }
   };
