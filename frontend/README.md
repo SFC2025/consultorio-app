@@ -8,9 +8,12 @@ Aplicación Fullstack MERN desarrollada para la gestión de turnos y pacientes e
 🔗 [https://kinesia.vercel.app](https://kinesia.vercel.app) — *(pendiente de deploy)*
 
 ---
+```markdown
 
 ## 📦 Estructura del Proyecto
+
 ```text
+
 consultorio-app/
 │ 
 ├── backend/                          # Lógica del servidor (API)
