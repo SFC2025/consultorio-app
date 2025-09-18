@@ -77,7 +77,7 @@ consultorio-app/
 └── README.md
 └── LICENSE
 
-```text
+```
 ---
 
 ## 🛠️ Tecnologías usadas
