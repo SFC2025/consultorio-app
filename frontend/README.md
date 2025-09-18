@@ -10,7 +10,7 @@ Aplicación Fullstack MERN desarrollada para la gestión de turnos y pacientes e
 ---
 
 ## 📦 Estructura del Proyecto
-
+```
 consultorio-app/
 │ 
 ├── backend/                          # Lógica del servidor (API)
@@ -76,7 +76,7 @@ consultorio-app/
 └── package-lock.json                 # Lockfile raíz
 └── README.md
 └── LICENSE
-
+```
 
 ---
 
