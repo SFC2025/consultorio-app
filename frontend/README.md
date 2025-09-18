@@ -53,7 +53,7 @@ consultorio-app/
 │   │   │   ├── quiensomos2.jpeg
 │   │   │   └── quiensomos3.jpeg
 │   │   │
-│   │   ├── components/               # Componentes reutilizables (podés agregar más aquí)
+│   │   ├── components/               # Componentes reutilizables 
 │   │   │   └── (vacío por ahora)
 │   │   │
 │   │   ├── pages/                    # Vistas/páginas completas
@@ -76,8 +76,8 @@ consultorio-app/
 └── package-lock.json                 # Lockfile raíz
 └── README.md
 └── LICENSE
-```
 
+```
 ---
 
 ## 🛠️ Tecnologías usadas
